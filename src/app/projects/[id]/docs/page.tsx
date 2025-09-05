@@ -202,8 +202,8 @@ function DocsPageContent({ projectId }: { projectId: string }) {
 
           {/* Editor Modal */}
           {(editingDoc || isCreating) && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl">
+            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+              <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
                 <MarkdownEditor
                   initialTitle={editingDoc?.title || ""}
                   initialContent={editingDoc?.content || ""}
