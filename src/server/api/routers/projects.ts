@@ -190,4 +190,135 @@ export const projectsRouter = createTRPCRouter({
         where: { id: input.id },
       });
     }),
+
+  inviteMember: protectedProcedure
+    .input(
+      z.object({
+        email: z.string().email("Invalid email address"),
+        role: z.enum(["MEMBER", "VIEWER"]),
+        projectId: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify user has admin access to this project
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.projectId,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+              role: "ADMIN",
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new Error("Project not found or access denied");
+      }
+
+      // Find or create user by email
+      let user = await ctx.db.user.findUnique({
+        where: { email: input.email },
+      });
+
+      if (!user) {
+        // Create user if they don't exist
+        user = await ctx.db.user.create({
+          data: {
+            email: input.email,
+            name: input.email.split("@")[0], // Use email prefix as name
+          },
+        });
+      }
+
+      // Check if user is already a member
+      const existingMember = await ctx.db.projectMember.findUnique({
+        where: {
+          userId_projectId: {
+            userId: user.id,
+            projectId: input.projectId,
+          },
+        },
+      });
+
+      if (existingMember) {
+        throw new Error("User is already a member of this project");
+      }
+
+      // Add user to project
+      return ctx.db.projectMember.create({
+        data: {
+          userId: user.id,
+          projectId: input.projectId,
+          role: input.role,
+        },
+        include: {
+          user: true,
+        },
+      });
+    }),
+
+  removeMember: protectedProcedure
+    .input(z.object({ memberId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify user has admin access to this project
+      const member = await ctx.db.projectMember.findFirst({
+        where: {
+          id: input.memberId,
+          project: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+                role: "ADMIN",
+              },
+            },
+          },
+        },
+      });
+
+      if (!member) {
+        throw new Error("Member not found or access denied");
+      }
+
+      return ctx.db.projectMember.delete({
+        where: { id: input.memberId },
+      });
+    }),
+
+  updateMemberRole: protectedProcedure
+    .input(
+      z.object({
+        memberId: z.string(),
+        role: z.enum(["ADMIN", "MEMBER", "VIEWER"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify user has admin access to this project
+      const member = await ctx.db.projectMember.findFirst({
+        where: {
+          id: input.memberId,
+          project: {
+            members: {
+              some: {
+                userId: ctx.session.user.id,
+                role: "ADMIN",
+              },
+            },
+          },
+        },
+      });
+
+      if (!member) {
+        throw new Error("Member not found or access denied");
+      }
+
+      return ctx.db.projectMember.update({
+        where: { id: input.memberId },
+        data: { role: input.role },
+        include: {
+          user: true,
+        },
+      });
+    }),
 });

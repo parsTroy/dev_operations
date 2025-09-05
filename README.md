@@ -34,6 +34,13 @@ A collaborative app for developers to manage projects, tasks, and documentation 
 - [x] Live message updates
 - [x] Project member integration
 
+### ✅ Phase 6 - Team Collaboration
+- [x] Team member management
+- [x] Role-based access control (Admin, Member, Viewer)
+- [x] Invite system with email
+- [x] Team member removal
+- [x] Project access control
+
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
