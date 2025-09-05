@@ -1,7 +1,6 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { SignOutButton } from "~/components/auth/sign-out-button";
 import { NewProjectForm } from "~/components/projects/new-project-form";
@@ -10,38 +9,32 @@ import { NewProjectButton } from "~/components/projects/new-project-button";
 import { EditProjectModal } from "~/components/projects/edit-project-modal";
 import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
 import { UserProfile } from "~/components/profile/user-profile";
+import { AuthRedirect } from "~/components/auth/auth-redirect";
 import { Plus, Users, CheckSquare, FileText, Edit, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "~/trpc/react";
 
-export default function HomePage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+function DashboardContent() {
+  const { data: session } = useSession();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/api/auth/signin");
-    }
-  }, [status, router]);
-
   const { data: projects, isLoading } = api.projects.getAll.useQuery();
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Loading projects...</p>
         </div>
       </div>
     );
   }
 
-  if (!session || !projects) {
+  if (!projects) {
     return null;
   }
 
@@ -55,11 +48,11 @@ export default function HomePage() {
               <div className="flex items-center">
                 <h1 className="text-xl font-semibold text-gray-900">dev_operations</h1>
               </div>
-                          <div className="flex items-center space-x-4">
-              <NotificationsDropdown />
-              <UserProfile />
-              <SignOutButton />
-            </div>
+              <div className="flex items-center space-x-4">
+                <NotificationsDropdown />
+                <UserProfile />
+                <SignOutButton />
+              </div>
             </div>
           </div>
         </header>
@@ -186,5 +179,13 @@ export default function HomePage() {
         />
       )}
     </ProjectModalProvider>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <AuthRedirect>
+      <DashboardContent />
+    </AuthRedirect>
   );
 }
