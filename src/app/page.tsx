@@ -7,6 +7,7 @@ import { NewProjectForm } from "~/components/projects/new-project-form";
 import { ProjectModalProvider } from "~/components/projects/project-modal-provider";
 import { NewProjectButton } from "~/components/projects/new-project-button";
 import { Plus, Users, CheckSquare, FileText } from "lucide-react";
+import Link from "next/link";
 
 export default async function HomePage() {
   const session = await auth();
@@ -63,8 +64,9 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project) => (
-                <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+            {projects.map((project) => (
+              <Link key={project.id} href={`/projects/${project.id}`}>
+                <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -102,7 +104,8 @@ export default async function HomePage() {
                     </span>
                   </div>
                 </div>
-              ))}
+              </Link>
+            ))}
             </div>
           )}
         </main>
