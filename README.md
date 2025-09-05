@@ -28,6 +28,12 @@ A collaborative app for developers to manage projects, tasks, and documentation 
 - [x] GitHub integration
 - [x] Modern UI with Tailwind CSS
 
+### ✅ Phase 5 - Real-time Chat & Mentions
+- [x] Real-time chat per project
+- [x] @username mentions
+- [x] Live message updates
+- [x] Project member integration
+
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
@@ -79,6 +85,14 @@ GITHUB_CLIENT_ID="your-github-client-id"
 GITHUB_CLIENT_SECRET="your-github-client-secret"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Pusher (Real-time Chat)
+PUSHER_APP_ID="your-pusher-app-id"
+PUSHER_SECRET="your-pusher-secret"
+PUSHER_KEY="your-pusher-key"
+PUSHER_CLUSTER="your-pusher-cluster"
+NEXT_PUBLIC_PUSHER_KEY="your-pusher-key"
+NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
 ```
 
 4. Set up the database

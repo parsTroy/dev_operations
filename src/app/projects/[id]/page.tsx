@@ -11,6 +11,7 @@ import { NotificationsDropdown } from "~/components/notifications/notifications-
 import { UserProfile } from "~/components/profile/user-profile";
 import { EditProjectModal } from "~/components/projects/edit-project-modal";
 import { DroppableColumn } from "~/components/tasks/droppable-column";
+import { ChatWindow } from "~/components/chat/chat-window";
 import { ArrowLeft, Users, Calendar, Tag, FileText, Edit, MoreVertical } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
@@ -252,6 +253,9 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           onClick={() => setShowProjectMenu(false)}
         />
       )}
+
+      {/* Chat Window */}
+      <ChatWindow projectId={id} />
     </TaskModalProvider>
   );
 }
