@@ -48,9 +48,11 @@ export function HeroSection() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
-              View Demo
-            </Button>
+            <Link href="/demo">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                View Demo
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
