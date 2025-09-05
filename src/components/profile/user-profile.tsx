@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
-import { User, Github, Mail, Calendar, ExternalLink } from "lucide-react";
+import { Github, Mail, Calendar, ExternalLink } from "lucide-react";
 
 export function UserProfile() {
   const { data: session } = useSession();
@@ -19,9 +19,17 @@ export function UserProfile() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2"
       >
-        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-          {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
-        </div>
+        {session.user.image ? (
+          <img
+            src={session.user.image}
+            alt={session.user.name || "User"}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
+          </div>
+        )}
         <span className="hidden md:block text-sm">
           {session.user.name || session.user.email}
         </span>
@@ -31,9 +39,17 @@ export function UserProfile() {
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
           <div className="p-6">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-medium">
-                {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
-              </div>
+              {session.user.image ? (
+                <img
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-medium">
+                  {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
+                </div>
+              )}
               <div>
                 <h3 className="font-semibold text-gray-900">
                   {session.user.name || "User"}
@@ -49,13 +65,6 @@ export function UserProfile() {
                 <Mail className="h-4 w-4" />
                 <span>{session.user.email}</span>
               </div>
-              
-              {session.user.image && (
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <User className="h-4 w-4" />
-                  <span>Profile Image Available</span>
-                </div>
-              )}
 
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />

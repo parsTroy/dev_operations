@@ -9,6 +9,7 @@ export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   
   const { data: notifications, isLoading } = api.notifications.getByUser.useQuery();
+  const utils = api.useUtils();
   const markAsRead = api.notifications.markAsRead.useMutation();
   const markAllAsRead = api.notifications.markAllAsRead.useMutation();
 
@@ -16,10 +17,18 @@ export function NotificationsDropdown() {
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead.mutateAsync({ id });
+    // Invalidate the notifications query to refresh the UI
+    await utils.notifications.getByUser.invalidate();
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsRead.mutateAsync();
+    try {
+      await markAllAsRead.mutateAsync();
+      // Invalidate the notifications query to refresh the UI
+      await utils.notifications.getByUser.invalidate();
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
   };
 
   return (
@@ -48,10 +57,11 @@ export function NotificationsDropdown() {
                   variant="ghost"
                   size="sm"
                   onClick={handleMarkAllAsRead}
+                  disabled={markAllAsRead.isPending}
                   className="text-xs"
                 >
                   <CheckCheck className="h-3 w-3 mr-1" />
-                  Mark all read
+                  {markAllAsRead.isPending ? "Marking..." : "Mark all read"}
                 </Button>
               )}
             </div>
@@ -88,6 +98,7 @@ export function NotificationsDropdown() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleMarkAsRead(notification.id)}
+                          disabled={markAsRead.isPending}
                           className="h-6 w-6 p-0"
                         >
                           <Check className="h-3 w-3" />
