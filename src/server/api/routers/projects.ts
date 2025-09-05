@@ -117,4 +117,77 @@ export const projectsRouter = createTRPCRouter({
 
       return project;
     }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1).optional(),
+        description: z.string().min(1).optional(),
+        tags: z.array(z.string()).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...updateData } = input;
+
+      // Verify user has admin access to this project
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+              role: "ADMIN",
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new Error("Project not found or access denied");
+      }
+
+      return ctx.db.project.update({
+        where: { id },
+        data: updateData,
+        include: {
+          members: {
+            include: {
+              user: true,
+            },
+          },
+          _count: {
+            select: {
+              tasks: true,
+              members: true,
+            },
+          },
+        },
+      });
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Verify user has admin access to this project
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.id,
+          members: {
+            some: {
+              userId: ctx.session.user.id,
+              role: "ADMIN",
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new Error("Project not found or access denied");
+      }
+
+      return ctx.db.project.delete({
+        where: { id: input.id },
+      });
+    }),
 });

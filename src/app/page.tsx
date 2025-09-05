@@ -1,22 +1,49 @@
-import { api } from "~/trpc/server";
-import { auth } from "~/server/auth";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { SignOutButton } from "~/components/auth/sign-out-button";
 import { NewProjectForm } from "~/components/projects/new-project-form";
 import { ProjectModalProvider } from "~/components/projects/project-modal-provider";
 import { NewProjectButton } from "~/components/projects/new-project-button";
-import { Plus, Users, CheckSquare, FileText } from "lucide-react";
+import { EditProjectModal } from "~/components/projects/edit-project-modal";
+import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
+import { UserProfile } from "~/components/profile/user-profile";
+import { Plus, Users, CheckSquare, FileText, Edit, MoreVertical } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { api } from "~/trpc/react";
 
-export default async function HomePage() {
-  const session = await auth();
+export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null);
 
-  if (!session) {
-    redirect("/api/auth/signin");
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/api/auth/signin");
+    }
+  }, [status, router]);
+
+  const { data: projects, isLoading } = api.projects.getAll.useQuery();
+
+  if (status === "loading" || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  const projects = await api.projects.getAll();
+  if (!session || !projects) {
+    return null;
+  }
 
   return (
     <ProjectModalProvider>
@@ -28,12 +55,11 @@ export default async function HomePage() {
               <div className="flex items-center">
                 <h1 className="text-xl font-semibold text-gray-900">dev_operations</h1>
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  Welcome, {session.user.name || session.user.email}
-                </span>
-                <SignOutButton />
-              </div>
+                          <div className="flex items-center space-x-4">
+              <NotificationsDropdown />
+              <UserProfile />
+              <SignOutButton />
+            </div>
             </div>
           </div>
         </header>
@@ -65,29 +91,59 @@ export default async function HomePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
-                <div className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow relative group">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Link href={`/projects/${project.id}`} className="block">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600">
                         {project.name}
                       </h3>
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {project.description}
-                      </p>
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {project.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                    </Link>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {project.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
                   
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowProjectMenu(showProjectMenu === project.id ? null : project.id)}
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <MoreVertical className="h-3 w-3" />
+                    </Button>
+                    {showProjectMenu === project.id && (
+                      <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingProject(project);
+                            setShowEditModal(true);
+                            setShowProjectMenu(null);
+                          }}
+                          className="w-full justify-start text-xs"
+                        >
+                          <Edit className="h-3 w-3 mr-2" />
+                          Edit Project
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <Link href={`/projects/${project.id}`} className="block">
                   <div className="flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
@@ -103,13 +159,32 @@ export default async function HomePage() {
                       {new Date(project.updatedAt).toLocaleDateString()}
                     </span>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             ))}
             </div>
           )}
         </main>
       </div>
+
+      {/* Edit Project Modal */}
+      {showEditModal && editingProject && (
+        <EditProjectModal
+          project={editingProject}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingProject(null);
+          }}
+        />
+      )}
+
+      {/* Overlay to close project menus */}
+      {showProjectMenu && (
+        <div
+          className="fixed inset-0 z-5"
+          onClick={() => setShowProjectMenu(null)}
+        />
+      )}
     </ProjectModalProvider>
   );
 }

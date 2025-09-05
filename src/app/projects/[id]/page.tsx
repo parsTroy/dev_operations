@@ -1,35 +1,94 @@
-import { api } from "~/trpc/server";
-import { auth } from "~/server/auth";
-import { redirect } from "next/navigation";
+"use client";
+
+import { api } from "~/trpc/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { SignOutButton } from "~/components/auth/sign-out-button";
 import { TaskModalProvider } from "~/components/tasks/task-modal-provider";
 import { NewTaskButton } from "~/components/tasks/new-task-button";
-import { ArrowLeft, Users, Calendar, Tag } from "lucide-react";
+import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
+import { UserProfile } from "~/components/profile/user-profile";
+import { EditProjectModal } from "~/components/projects/edit-project-modal";
+import { DroppableColumn } from "~/components/tasks/droppable-column";
+import { ArrowLeft, Users, Calendar, Tag, FileText, Edit, MoreVertical } from "lucide-react";
 import Link from "next/link";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { useState, useEffect } from "react";
+import { use } from "react";
 
 interface ProjectPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default async function ProjectPage({ params }: ProjectPageProps) {
-  const session = await auth();
+export default function ProjectPage({ params }: ProjectPageProps) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { id } = use(params);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [activeTask, setActiveTask] = useState<any>(null);
 
-  if (!session) {
-    redirect("/api/auth/signin");
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/api/auth/signin");
+    }
+  }, [status, router]);
+
+  const { data: project, isLoading: projectLoading } = api.projects.getById.useQuery({ id });
+  const { data: tasks, isLoading: tasksLoading } = api.tasks.getByProject.useQuery({ projectId: id });
+
+  const utils = api.useUtils();
+  const updateTaskStatus = api.tasks.updateStatus.useMutation({
+    onSuccess: async () => {
+      // Only invalidate tasks for this specific project
+      await utils.tasks.getByProject.invalidate({ projectId: id });
+    },
+  });
+
+  if (status === "loading" || projectLoading || tasksLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  const { id } = await params;
-  const project = await api.projects.getById({ id });
-  const tasks = await api.tasks.getByProject({ projectId: id });
+  if (!session || !project) {
+    return null;
+  }
 
   // Group tasks by status
   const tasksByStatus = {
-    TODO: tasks.filter((task) => task.status === "TODO"),
-    IN_PROGRESS: tasks.filter((task) => task.status === "IN_PROGRESS"),
-    DONE: tasks.filter((task) => task.status === "DONE"),
+    TODO: tasks?.filter((task) => task.status === "TODO") || [],
+    IN_PROGRESS: tasks?.filter((task) => task.status === "IN_PROGRESS") || [],
+    DONE: tasks?.filter((task) => task.status === "DONE") || [],
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = tasks?.find((t) => t.id === event.active.id);
+    setActiveTask(task);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over || active.id === over.id) return;
+
+    const taskId = active.id as string;
+    const newStatus = over.id as "TODO" | "IN_PROGRESS" | "DONE";
+
+    updateTaskStatus.mutate({
+      id: taskId,
+      status: newStatus,
+    });
   };
 
   return (
@@ -49,9 +108,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               <h1 className="text-xl font-semibold text-gray-900">dev_operations</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {session.user.name || session.user.email}
-              </span>
+              <NotificationsDropdown />
+              <UserProfile />
               <SignOutButton />
             </div>
           </div>
@@ -87,124 +145,113 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                 ))}
               </div>
             </div>
-            <NewTaskButton />
+            <div className="flex items-center gap-2">
+              <Link href={`/projects/${id}/docs`}>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Docs
+                </Button>
+              </Link>
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProjectMenu(!showProjectMenu)}
+                  className="flex items-center gap-2"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+                {showProjectMenu && (
+                  <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setShowEditModal(true);
+                        setShowProjectMenu(false);
+                      }}
+                      className="w-full justify-start text-xs"
+                    >
+                      <Edit className="h-3 w-3 mr-2" />
+                      Edit Project
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <NewTaskButton />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Kanban Board */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* TODO Column */}
-          <div className="bg-white rounded-lg shadow-sm border p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">To Do</h3>
-              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
-                {tasksByStatus.TODO.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {tasksByStatus.TODO.map((task) => (
-                <div key={task.id} className="bg-gray-50 rounded-lg p-3 border hover:shadow-sm transition-shadow">
-                  <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                  {task.description && (
-                    <p className="text-gray-600 text-xs mt-1 line-clamp-2">{task.description}</p>
-                  )}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                      task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {task.priority}
-                    </span>
-                    {task.assignee && (
-                      <div className="flex items-center gap-1">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                          {task.assignee.name?.charAt(0) || '?'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <DroppableColumn
+              id="TODO"
+              title="To Do"
+              tasks={tasksByStatus.TODO}
+              projectId={id}
+            />
+            <DroppableColumn
+              id="IN_PROGRESS"
+              title="In Progress"
+              tasks={tasksByStatus.IN_PROGRESS}
+              projectId={id}
+            />
+            <DroppableColumn
+              id="DONE"
+              title="Done"
+              tasks={tasksByStatus.DONE}
+              projectId={id}
+            />
           </div>
-
-          {/* IN_PROGRESS Column */}
-          <div className="bg-white rounded-lg shadow-sm border p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">In Progress</h3>
-              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
-                {tasksByStatus.IN_PROGRESS.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {tasksByStatus.IN_PROGRESS.map((task) => (
-                <div key={task.id} className="bg-gray-50 rounded-lg p-3 border hover:shadow-sm transition-shadow">
-                  <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                  {task.description && (
-                    <p className="text-gray-600 text-xs mt-1 line-clamp-2">{task.description}</p>
-                  )}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                      task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {task.priority}
-                    </span>
-                    {task.assignee && (
-                      <div className="flex items-center gap-1">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                          {task.assignee.name?.charAt(0) || '?'}
-                        </div>
+          
+          <DragOverlay>
+            {activeTask ? (
+              <div className="bg-white rounded-lg p-3 border shadow-lg opacity-90">
+                <h4 className="font-medium text-gray-900 text-sm">{activeTask.title}</h4>
+                {activeTask.description && (
+                  <p className="text-gray-600 text-xs mt-1 line-clamp-2">{activeTask.description}</p>
+                )}
+                <div className="flex items-center justify-between mt-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    activeTask.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+                    activeTask.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {activeTask.priority}
+                  </span>
+                  {activeTask.assignee && (
+                    <div className="flex items-center gap-1">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                        {activeTask.assignee.name?.charAt(0) || '?'}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* DONE Column */}
-          <div className="bg-white rounded-lg shadow-sm border p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Done</h3>
-              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
-                {tasksByStatus.DONE.length}
-              </span>
-            </div>
-            <div className="space-y-3">
-              {tasksByStatus.DONE.map((task) => (
-                <div key={task.id} className="bg-gray-50 rounded-lg p-3 border hover:shadow-sm transition-shadow">
-                  <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                  {task.description && (
-                    <p className="text-gray-600 text-xs mt-1 line-clamp-2">{task.description}</p>
+                    </div>
                   )}
-                  <div className="flex items-center justify-between mt-2">
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                      task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {task.priority}
-                    </span>
-                    {task.assignee && (
-                      <div className="flex items-center gap-1">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                          {task.assignee.name?.charAt(0) || '?'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </main>
       </div>
+
+      {/* Edit Project Modal */}
+      {showEditModal && project && (
+        <EditProjectModal
+          project={project}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+
+      {/* Overlay to close project menu */}
+      {showProjectMenu && (
+        <div
+          className="fixed inset-0 z-5"
+          onClick={() => setShowProjectMenu(false)}
+        />
+      )}
     </TaskModalProvider>
   );
 }
