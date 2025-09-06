@@ -11,7 +11,7 @@ import { NotificationsDropdown } from "~/components/notifications/notifications-
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
 import { PerformanceMonitor } from "~/components/performance/performance-monitor";
-import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical, BarChart3, Calendar, AlertTriangle, Clock, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useState, Suspense } from "react";
 import { api } from "~/trpc/react";
@@ -47,6 +47,201 @@ function ProjectsGridSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <ProjectCardSkeleton key={i} />
       ))}
+    </div>
+  );
+}
+
+function DashboardStats() {
+  const { data: projects } = api.projects.getAll.useQuery();
+  const { data: user } = api.subscriptions.getCurrentSubscription.useQuery();
+
+  // Calculate stats from all projects
+  const allTasks = projects?.flatMap(project => project.tasks || []) || [];
+  const totalTasks = allTasks.length;
+  const completedTasks = allTasks.filter(task => task.status === 'DONE').length;
+  const inProgressTasks = allTasks.filter(task => task.status === 'IN_PROGRESS').length;
+  const todoTasks = allTasks.filter(task => task.status === 'TODO').length;
+
+  // Get upcoming tasks (due in next 7 days)
+  const now = new Date();
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const upcomingTasks = allTasks.filter(task => 
+    task.dueDate && 
+    new Date(task.dueDate) >= now && 
+    new Date(task.dueDate) <= nextWeek
+  );
+
+  // Get overdue tasks
+  const overdueTasks = allTasks.filter(task => 
+    task.dueDate && 
+    new Date(task.dueDate) < now && 
+    task.status !== 'DONE'
+  );
+
+  // Get recent activity (tasks updated in last 3 days)
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const recentTasks = allTasks.filter(task => 
+    new Date(task.updatedAt) >= threeDaysAgo
+  ).slice(0, 5);
+
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
+      
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Tasks</p>
+              <p className="text-2xl font-bold text-gray-900">{totalTasks}</p>
+            </div>
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CheckSquare className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completion Rate</p>
+              <p className="text-2xl font-bold text-gray-900">{completionRate}%</p>
+            </div>
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">In Progress</p>
+              <p className="text-2xl font-bold text-gray-900">{inProgressTasks}</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Clock className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Projects</p>
+              <p className="text-2xl font-bold text-gray-900">{projects?.length || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <FileText className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Alerts and Upcoming Tasks */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Overdue Tasks Alert */}
+        {overdueTasks.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+              <h3 className="text-lg font-semibold text-red-900">Overdue Tasks</h3>
+            </div>
+            <div className="space-y-2">
+              {overdueTasks.slice(0, 3).map((task) => (
+                <div key={task.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-900">{task.title}</p>
+                    <p className="text-xs text-red-600">
+                      Due {new Date(task.dueDate!).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Link href={`/projects/${task.projectId}`}>
+                    <Button variant="outline" size="sm" className="text-red-600 border-red-300">
+                      View
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+              {overdueTasks.length > 3 && (
+                <p className="text-xs text-red-600">
+                  +{overdueTasks.length - 3} more overdue tasks
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Upcoming Tasks */}
+        {upcomingTasks.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Calendar className="h-6 w-6 text-blue-600" />
+              <h3 className="text-lg font-semibold text-blue-900">Upcoming Tasks</h3>
+            </div>
+            <div className="space-y-2">
+              {upcomingTasks.slice(0, 3).map((task) => (
+                <div key={task.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">{task.title}</p>
+                    <p className="text-xs text-blue-600">
+                      Due {new Date(task.dueDate!).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Link href={`/projects/${task.projectId}`}>
+                    <Button variant="outline" size="sm" className="text-blue-600 border-blue-300">
+                      View
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+              {upcomingTasks.length > 3 && (
+                <p className="text-xs text-blue-600">
+                  +{upcomingTasks.length - 3} more upcoming tasks
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Recent Activity */}
+      {recentTasks.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+          <div className="space-y-3">
+            {recentTasks.map((task) => (
+              <div key={task.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    task.status === 'DONE' ? 'bg-green-500' :
+                    task.status === 'IN_PROGRESS' ? 'bg-yellow-500' : 'bg-gray-400'
+                  }`}></div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                    <p className="text-xs text-gray-500">
+                      {task.assignee?.name || 'Unassigned'} • {task.priority} priority
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">
+                    {new Date(task.updatedAt).toLocaleDateString()}
+                  </span>
+                  <Link href={`/projects/${task.projectId}`}>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      →
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,6 +315,11 @@ function DashboardContent() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Dashboard Overview */}
+          <Suspense fallback={<div className="animate-pulse h-64 bg-gray-200 rounded mb-8"></div>}>
+            <DashboardStats />
+          </Suspense>
+
           <div className="flex justify-between items-center mb-8">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Your Projects</h2>
