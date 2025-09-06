@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Button } from "~/components/ui/button";
-import { Edit, MoreVertical, GripVertical } from "lucide-react";
+import { Edit, MoreVertical, GripVertical, User, Calendar, AlertCircle } from "lucide-react";
 import { EditTaskModal } from "./edit-task-modal";
+import { useTaskModalContext } from "~/components/tasks/task-modal-provider";
 
 interface DraggableTaskCardProps {
   task: {
@@ -20,7 +21,7 @@ interface DraggableTaskCardProps {
 }
 
 export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
-  const [showEditModal, setShowEditModal] = useState(false);
+  const { openModal } = useTaskModalContext();
   const [showMenu, setShowMenu] = useState(false);
 
   const {
@@ -37,94 +38,116 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "HIGH":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "MEDIUM":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "LOW":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+
   return (
     <>
       <div
         ref={setNodeRef}
         style={style}
-        className={`bg-gray-50 rounded-lg p-3 border hover:shadow-sm transition-shadow ${
+        className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${
           isDragging ? "opacity-50" : ""
         }`}
       >
-        <div className="flex items-start justify-between">
-          {/* Draggable content area */}
-          <div 
-            className="flex-1 min-w-0 cursor-move"
-            {...listeners}
-            {...attributes}
+        <div className="flex items-start justify-between mb-2">
+          <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal();
+            }}
+            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
           >
-            <div className="flex items-center gap-2 mb-1">
-              <GripVertical className="h-3 w-3 text-gray-400" />
-              <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-            </div>
-            {task.description && (
-              <p className="text-gray-600 text-xs mt-1 line-clamp-2">{task.description}</p>
-            )}
-            <div className="flex items-center justify-between mt-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                task.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-                task.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-green-100 text-green-800'
-              }`}>
-                {task.priority}
-              </span>
-              {task.assignee && (
-                <div className="flex items-center gap-1">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                    {task.assignee.name?.charAt(0) || '?'}
-                  </div>
-                </div>
-              )}
-            </div>
+            <Edit className="h-3 w-3" />
+          </Button>
+        </div>
+
+        {task.description && (
+          <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
+              {task.priority}
+            </span>
             {task.dueDate && (
-              <p className="text-xs text-gray-500 mt-1">
-                Due: {new Date(task.dueDate).toLocaleDateString()}
-              </p>
+              <div className={`flex items-center gap-1 text-xs ${
+                isOverdue ? "text-red-600" : "text-gray-500"
+              }`}>
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+              </div>
             )}
           </div>
-          
-          {/* Non-draggable menu area */}
-          <div className="relative ml-2 flex-shrink-0">
+        </div>
+
+        {/* Assigned Team Member */}
+        {task.assignee && (
+          <div className="mt-2 flex items-center gap-2">
+            <User className="h-3 w-3 text-gray-400" />
+            <span className="text-xs text-gray-600">
+              {task.assignee.name || 'Unknown User'}
+            </span>
+          </div>
+        )}
+
+        {/* Overdue Warning */}
+        {isOverdue && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
+            <AlertCircle className="h-3 w-3" />
+            <span>Overdue</span>
+          </div>
+        )}
+      </div>
+
+      {/* Non-draggable menu area */}
+      <div className="relative ml-2 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMenu(!showMenu);
+          }}
+          className="h-6 w-6 p-0"
+        >
+          <MoreVertical className="h-3 w-3" />
+        </Button>
+        
+        {showMenu && (
+          <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
             <Button
               variant="ghost"
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowMenu(!showMenu);
+                openModal();
+                setShowMenu(false);
               }}
-              className="h-6 w-6 p-0"
+              className="w-full justify-start text-xs"
             >
-              <MoreVertical className="h-3 w-3" />
+              <Edit className="h-3 w-3 mr-2" />
+              Edit
             </Button>
-            
-            {showMenu && (
-              <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowEditModal(true);
-                    setShowMenu(false);
-                  }}
-                  className="w-full justify-start text-xs"
-                >
-                  <Edit className="h-3 w-3 mr-2" />
-                  Edit
-                </Button>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
-
-      {showEditModal && (
-        <EditTaskModal
-          task={task}
-          projectId={projectId}
-          onClose={() => setShowEditModal(false)}
-        />
-      )}
 
       {/* Overlay to close menu */}
       {showMenu && (

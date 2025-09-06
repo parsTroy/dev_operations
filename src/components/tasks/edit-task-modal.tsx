@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
-import { X, Save, Trash2 } from "lucide-react";
+import { X, Calendar, User, AlertCircle } from "lucide-react";
 
 interface EditTaskModalProps {
   task: {
@@ -20,98 +20,89 @@ interface EditTaskModalProps {
 }
 
 export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) {
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description || "");
-  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH">(task.priority);
-  const [dueDate, setDueDate] = useState(
-    task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: task.title,
+    description: task.description || "",
+    priority: task.priority,
+    dueDate: task.dueDate ? task.dueDate.toISOString().split('T')[0] : "",
+    assignedTo: task.assignedTo || "",
+  });
 
   const utils = api.useUtils();
   const updateTask = api.tasks.update.useMutation({
     onSuccess: async () => {
-      // Only invalidate tasks for this specific project
       await utils.tasks.getByProject.invalidate({ projectId });
       onClose();
     },
-    onError: (error) => {
-      console.error("Error updating task:", error);
-      setIsSubmitting(false);
-    },
   });
+
   const deleteTask = api.tasks.delete.useMutation({
     onSuccess: async () => {
-      // Only invalidate tasks for this specific project
       await utils.tasks.getByProject.invalidate({ projectId });
       onClose();
     },
-    onError: (error) => {
-      console.error("Error deleting task:", error);
-      setIsSubmitting(false);
-    },
   });
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+  // Get project members for assignment dropdown
+  const { data: project } = api.projects.getById.useQuery({ id: projectId });
+  const teamMembers = project?.members || [];
 
-    setIsSubmitting(true);
-    try {
-      await updateTask.mutateAsync({
-        id: task.id,
-        title: title.trim(),
-        description: description.trim() || undefined,
-        priority,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-      });
-    } catch (error) {
-      console.error("Error updating task:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) return;
+
+    await updateTask.mutateAsync({
+      id: task.id,
+      title: formData.title.trim(),
+      description: formData.description.trim() || null,
+      priority: formData.priority,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
+      assignedTo: formData.assignedTo || null,
+    });
   };
 
   const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this task?")) {
-      setIsSubmitting(true);
-      try {
-        await deleteTask.mutateAsync({ id: task.id });
-      } catch (error) {
-        console.error("Error deleting task:", error);
-      } finally {
-        setIsSubmitting(false);
-      }
+      await deleteTask.mutateAsync({ id: task.id });
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-lg shadow-xl w-[90vw] max-w-md animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-lg font-semibold text-gray-900">Edit Task</h2>
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={onClose}
-            className="h-8 w-8"
+            className="h-6 w-6 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Task Title
+              Task Title *
             </label>
             <input
-              id="title"
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter task title"
               required
             />
           </div>
@@ -122,11 +113,12 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
             </label>
             <textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the task"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter task description"
             />
           </div>
 
@@ -137,8 +129,9 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
               </label>
               <select
                 id="priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as "LOW" | "MEDIUM" | "HIGH")}
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="LOW">Low</option>
@@ -151,14 +144,47 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
               <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
                 Due Date
               </label>
-              <input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <div className="relative">
+                <input
+                  type="date"
+                  id="dueDate"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">
+              Assign to Team Member
+            </label>
+            <div className="relative">
+              <select
+                id="assignedTo"
+                name="assignedTo"
+                value={formData.assignedTo}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Unassigned</option>
+                {teamMembers.map((member) => (
+                  <option key={member.id} value={member.userId}>
+                    {member.user.name || member.user.email || 'Unknown User'}
+                  </option>
+                ))}
+              </select>
+              <User className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
+            </div>
+            {teamMembers.length === 0 && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-amber-600">
+                <AlertCircle className="h-4 w-4" />
+                <span>No team members available. Add team members to assign tasks.</span>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between pt-4">
@@ -166,29 +192,25 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
               type="button"
               variant="outline"
               onClick={handleDelete}
-              disabled={isSubmitting}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              disabled={updateTask.isPending || deleteTask.isPending}
+              className="text-red-600 border-red-300 hover:bg-red-50"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              Delete Task
             </Button>
-
             <div className="flex space-x-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={isSubmitting}
+                disabled={updateTask.isPending || deleteTask.isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting || !title.trim()}
-                className="flex items-center gap-2"
+                disabled={!formData.title.trim() || updateTask.isPending || deleteTask.isPending}
               >
-                <Save className="h-4 w-4" />
-                {isSubmitting ? "Saving..." : "Save Changes"}
+                {updateTask.isPending ? "Updating..." : "Update Task"}
               </Button>
             </div>
           </div>
