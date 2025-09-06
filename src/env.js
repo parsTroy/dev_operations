@@ -16,12 +16,20 @@ export const env = createEnv({
         ? z.string().min(1)
         : z.string().min(1).optional(),
     NEXTAUTH_URL: z.preprocess(
-      // Always normalize to www version
+      // Always normalize to www version and ensure it's the correct domain
       (str) => {
         const url = process.env.VERCEL_URL ?? str;
+        
+        // In production, always use the custom domain
+        if (process.env.NODE_ENV === "production") {
+          return "https://www.devoperations.ca";
+        }
+        
+        // In development, use the provided URL or localhost
         if (typeof url === 'string' && url.includes('devoperations.ca')) {
           return url.startsWith('www.') ? `https://${url}` : `https://www.${url}`;
         }
+        
         return url;
       },
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
