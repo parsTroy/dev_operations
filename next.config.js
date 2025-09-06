@@ -18,9 +18,8 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
 
-  // Experimental features for performance
+  // Experimental features for performance (removed optimizeCss)
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 

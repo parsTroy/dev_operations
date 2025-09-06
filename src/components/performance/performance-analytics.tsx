@@ -38,19 +38,19 @@ export function PerformanceAnalytics() {
       }
     }
 
-    // Web Vitals
-    import("web-vitals").then(({ onLCP, onFID, onCLS }) => {
-      onLCP((metric) => {
+    // Web Vitals (using correct imports)
+    import("web-vitals").then(({ onLCP, onCLS, onINP }) => {
+      onLCP((metric: any) => {
         metrics.largestContentfulPaint = metric.value;
         sendMetrics(metrics);
       });
 
-      onFID((metric) => {
+      onINP((metric: any) => {
         metrics.firstInputDelay = metric.value;
         sendMetrics(metrics);
       });
 
-      onCLS((metric) => {
+      onCLS((metric: any) => {
         metrics.cumulativeLayoutShift = metric.value;
         sendMetrics(metrics);
       });

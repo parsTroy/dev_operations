@@ -28,6 +28,7 @@ export function PerformanceMonitor() {
       onFCP(reportWebVitals);
       onLCP(reportWebVitals);
       onTTFB(reportWebVitals);
+      onINP(reportWebVitals);
     });
   }, []);
 
