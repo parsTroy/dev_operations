@@ -162,7 +162,6 @@ export function ContactPage() {
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>• Check our <Link href="/help" className="text-blue-600 hover:text-blue-800">Help Center</Link> for common questions</li>
                 <li>• Browse our <Link href="/documentation" className="text-blue-600 hover:text-blue-800">Documentation</Link> for detailed guides</li>
-                <li>• Join our <Link href="/community" className="text-blue-600 hover:text-blue-800">Community</Link> to connect with other users</li>
               </ul>
             </div>
           </div>

@@ -129,11 +129,6 @@ export function DocumentationPage() {
                   Contact Support
                 </Button>
               </Link>
-              <Link href="/community">
-                <Button variant="outline" size="lg">
-                  Join Community
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
