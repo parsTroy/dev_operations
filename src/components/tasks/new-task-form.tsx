@@ -37,10 +37,10 @@ export function NewTaskForm({ onClose, projectId }: NewTaskFormProps) {
 
     await createTask.mutateAsync({
       title: formData.title.trim(),
-      description: formData.description.trim() || null,
+      description: formData.description.trim() || undefined,
       priority: formData.priority,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-      assignedTo: formData.assignedTo || null,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      assignedTo: formData.assignedTo || undefined,
       projectId,
     });
   };

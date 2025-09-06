@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
 import { X, Calendar, User, AlertCircle } from "lucide-react";
@@ -21,12 +21,23 @@ interface EditTaskModalProps {
 
 export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) {
   const [formData, setFormData] = useState({
-    title: task.title,
-    description: task.description || "",
-    priority: task.priority,
-    dueDate: task.dueDate ? task.dueDate.toISOString().split('T')[0] : "",
-    assignedTo: task.assignedTo || "",
+    title: "",
+    description: "",
+    priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH",
+    dueDate: "",
+    assignedTo: "",
   });
+
+  // Initialize form data when task changes
+  useEffect(() => {
+    setFormData({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority,
+      dueDate: task.dueDate ? task.dueDate.toISOString().split('T')[0] : "",
+      assignedTo: task.assignedTo || "",
+    });
+  }, [task]);
 
   const utils = api.useUtils();
   const updateTask = api.tasks.update.useMutation({
@@ -54,10 +65,10 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
     await updateTask.mutateAsync({
       id: task.id,
       title: formData.title.trim(),
-      description: formData.description.trim() || null,
+      description: formData.description.trim() || undefined,
       priority: formData.priority,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : null,
-      assignedTo: formData.assignedTo || null,
+      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+      assignedTo: formData.assignedTo || undefined,
     });
   };
 
