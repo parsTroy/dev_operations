@@ -80,7 +80,7 @@ export const chatRouter = createTRPCRouter({
       const mentionedUsers = await ctx.db.user.findMany({
         where: {
           name: {
-            in: mentions,
+            in: mentions.filter((mention): mention is string => mention !== undefined),
           },
         },
       });
