@@ -33,7 +33,7 @@ export function Footer() {
             <h4 className="text-lg font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-gray-400">
               <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
               <li><a href="#" className="hover:text-white transition-colors">API</a></li>
               <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
             </ul>
