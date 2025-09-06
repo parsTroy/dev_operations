@@ -33,6 +33,10 @@ export function HelpPage() {
     {
       question: "How do I cancel my subscription?",
       answer: "You can cancel your subscription anytime from the Billing page. Your account will remain active until the end of your current billing period."
+    },
+    {
+      question: "How can I get help with a technical issue?",
+      answer: "For technical support, please email us at support@devoperations.ca with a detailed description of your issue. We'll respond within 24 hours."
     }
   ];
 
@@ -166,11 +170,12 @@ export function HelpPage() {
               Still Need Help?
             </h2>
             <p className="text-gray-600 mb-6">
-              Can't find the answer you're looking for? Contact our support team.
+              Can't find the answer you're looking for? Contact our support team via email.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
                 <Button size="lg">
+                  <Mail className="h-4 w-4 mr-2" />
                   Contact Support
                 </Button>
               </Link>
@@ -180,6 +185,9 @@ export function HelpPage() {
                 </Button>
               </Link>
             </div>
+            <p className="text-sm text-gray-500 mt-4">
+              Email us at <span className="font-medium">support@devoperations.ca</span> and we'll respond within 24 hours.
+            </p>
           </div>
         </div>
       </main>

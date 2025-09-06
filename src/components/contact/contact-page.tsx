@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, Mail, MessageSquare, Phone, MapPin, Send } from "lucide-react";
+import { ArrowLeft, Mail, Send } from "lucide-react";
 import Link from "next/link";
 
 export function ContactPage() {
@@ -149,27 +149,9 @@ export function ContactPage() {
                 <div className="flex items-start space-x-4">
                   <Mail className="h-6 w-6 text-blue-600 mt-1" />
                   <div>
-                    <h3 className="font-medium text-gray-900">Email</h3>
+                    <h3 className="font-medium text-gray-900">Email Support</h3>
                     <p className="text-gray-600">support@devoperations.ca</p>
                     <p className="text-sm text-gray-500">We'll respond within 24 hours</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <MessageSquare className="h-6 w-6 text-blue-600 mt-1" />
-                  <div>
-                    <h3 className="font-medium text-gray-900">Live Chat</h3>
-                    <p className="text-gray-600">Available 9 AM - 5 PM EST</p>
-                    <p className="text-sm text-gray-500">Monday to Friday</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <Phone className="h-6 w-6 text-blue-600 mt-1" />
-                  <div>
-                    <h3 className="font-medium text-gray-900">Phone</h3>
-                    <p className="text-gray-600">+1 (555) 123-4567</p>
-                    <p className="text-sm text-gray-500">For urgent issues only</p>
                   </div>
                 </div>
               </div>
