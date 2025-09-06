@@ -43,7 +43,8 @@ export const authConfig = {
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  adapter: PrismaAdapter(db),
+  // Temporarily remove adapter to test if that's the issue
+  // adapter: PrismaAdapter(db),
   callbacks: {
     session: ({ session, user }) => ({
       ...session,
@@ -73,4 +74,5 @@ export const authConfig = {
     signIn: '/api/auth/signin',
     error: '/api/auth/error',
   },
+  debug: process.env.NODE_ENV === 'development',
 } satisfies NextAuthConfig;
