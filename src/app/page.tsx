@@ -10,10 +10,46 @@ import { EditProjectModal } from "~/components/projects/edit-project-modal";
 import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
-import { Plus, Users, CheckSquare, FileText, Edit, MoreVertical } from "lucide-react";
+import { PerformanceMonitor } from "~/components/performance/performance-monitor";
+import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { api } from "~/trpc/react";
+
+// Loading skeleton component
+function ProjectCardSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow-sm border p-6 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="h-6 bg-gray-200 rounded mb-2 w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded mb-4 w-full"></div>
+          <div className="flex gap-1 mb-4">
+            <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+            <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-4 bg-gray-200 rounded w-8"></div>
+          <div className="h-4 bg-gray-200 rounded w-8"></div>
+        </div>
+        <div className="h-4 bg-gray-200 rounded w-20"></div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectsGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <ProjectCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
 
 function DashboardContent() {
   const { data: session } = useSession();
@@ -26,11 +62,35 @@ function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading projects...</p>
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl font-semibold text-gray-900">dev_operations</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-96 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+            </div>
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <ProjectsGridSkeleton />
+        </main>
       </div>
     );
   }
@@ -95,80 +155,82 @@ function DashboardContent() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow relative group">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <Link href={`/projects/${project.id}`} className="block">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600">
-                        {project.name}
-                      </h3>
-                    </Link>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {project.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {project.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowProjectMenu(showProjectMenu === project.id ? null : project.id)}
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreVertical className="h-3 w-3" />
-                    </Button>
-                    {showProjectMenu === project.id && (
-                      <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
+            <Suspense fallback={<ProjectsGridSkeleton />}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <div key={project.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow relative group">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <Link href={`/projects/${project.id}`} className="block">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600">
+                            {project.name}
+                          </h3>
+                        </Link>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                          {project.description}
+                        </p>
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {project.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setEditingProject(project);
-                            setShowEditModal(true);
-                            setShowProjectMenu(null);
-                          }}
-                          className="w-full justify-start text-xs"
+                          onClick={() => setShowProjectMenu(showProjectMenu === project.id ? null : project.id)}
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <Edit className="h-3 w-3 mr-2" />
-                          Edit Project
+                          <MoreVertical className="h-3 w-3" />
                         </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <Link href={`/projects/${project.id}`} className="block">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span>{project._count.members}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <CheckSquare className="h-4 w-4" />
-                        <span>{project._count.tasks}</span>
+                        {showProjectMenu === project.id && (
+                          <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingProject(project);
+                                setShowEditModal(true);
+                                setShowProjectMenu(null);
+                              }}
+                              className="w-full justify-start text-xs"
+                            >
+                              <Edit className="h-3 w-3 mr-2" />
+                              Edit Project
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <span className="text-xs">
-                      {new Date(project.updatedAt).toLocaleDateString()}
-                    </span>
+                    
+                    <Link href={`/projects/${project.id}`} className="block">
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            <span>{project._count.members}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CheckSquare className="h-4 w-4" />
+                            <span>{project._count.tasks}</span>
+                          </div>
+                        </div>
+                        <span className="text-xs">
+                          {new Date(project.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </Link>
                   </div>
-                </Link>
+                ))}
               </div>
-            ))}
-            </div>
+            </Suspense>
           )}
         </main>
       </div>
@@ -197,8 +259,11 @@ function DashboardContent() {
 
 export default function HomePage() {
   return (
-    <AuthRedirect>
-      <DashboardContent />
-    </AuthRedirect>
+    <>
+      <PerformanceMonitor />
+      <AuthRedirect>
+        <DashboardContent />
+      </AuthRedirect>
+    </>
   );
 }
