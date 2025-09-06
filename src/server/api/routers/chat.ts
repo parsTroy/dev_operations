@@ -35,18 +35,17 @@ export const chatRouter = createTRPCRouter({
         },
       });
 
-      // Create message
+      // Create message without mentions first
       const message = await ctx.db.chatMessage.create({
         data: {
           content: input.content,
           projectId: input.projectId,
           userId: ctx.session.user.id,
-          mentions: mentions.map((m) => m.slice(1)), // Store without @ symbol
         },
         include: { user: true, mentions: { include: { user: true } } },
       });
 
-      // Create mention records
+      // Create mention records if there are mentioned users
       if (mentionedUsers.length > 0) {
         await ctx.db.mention.createMany({
           data: mentionedUsers.map((user) => ({
@@ -54,6 +53,19 @@ export const chatRouter = createTRPCRouter({
             userId: user.id,
           })),
         });
+
+        // Fetch the message again with mentions
+        const messageWithMentions = await ctx.db.chatMessage.findUnique({
+          where: { id: message.id },
+          include: { user: true, mentions: { include: { user: true } } },
+        });
+
+        // Trigger real-time update with mentions
+        await pusher.trigger(`project-${input.projectId}`, "new-message", {
+          message: messageWithMentions,
+        });
+
+        return messageWithMentions;
       }
 
       // Trigger real-time update
