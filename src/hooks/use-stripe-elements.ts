@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadStripe, StripeElements } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe, type StripeElements } from "@stripe/stripe-js";
 
 export function useStripeElements() {
   const [stripe, setStripe] = useState<any>(null);
