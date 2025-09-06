@@ -5,11 +5,11 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { SignOutButton } from "~/components/auth/sign-out-button";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Edit, Trash2, Eye, Plus } from "lucide-react";
 import Link from "next/link";
-import { MarkdownEditor } from "~/components/docs/markdown-editor";
 import { useEffect, useState } from "react";
 import { use } from "react";
+import { MarkdownEditor } from "~/components/docs/markdown-editor";
 
 interface DocsPageProps {
   params: Promise<{
@@ -49,6 +49,7 @@ export default function DocsPage({ params }: DocsPageProps) {
 function DocsPageContent({ projectId }: { projectId: string }) {
   const { data: session } = useSession();
   const [editingDoc, setEditingDoc] = useState<{ id: string; title: string; content: string } | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<{ id: string; title: string; content: string } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: project } = api.projects.getById.useQuery({ id: projectId });
@@ -65,6 +66,12 @@ function DocsPageContent({ projectId }: { projectId: string }) {
     onSuccess: async () => {
       await utils.docs.invalidate();
       setEditingDoc(null);
+    },
+  });
+  const deleteDoc = api.docs.delete.useMutation({
+    onSuccess: async () => {
+      await utils.docs.invalidate();
+      setViewingDoc(null);
     },
   });
 
@@ -86,17 +93,32 @@ function DocsPageContent({ projectId }: { projectId: string }) {
 
   const handleCancel = () => {
     setEditingDoc(null);
+    setViewingDoc(null);
     setIsCreating(false);
   };
 
   const handleEditDoc = (doc: { id: string; title: string; content: string }) => {
     setEditingDoc(doc);
+    setViewingDoc(null);
     setIsCreating(false);
+  };
+
+  const handleViewDoc = (doc: { id: string; title: string; content: string }) => {
+    setViewingDoc(doc);
+    setEditingDoc(null);
+    setIsCreating(false);
+  };
+
+  const handleDeleteDoc = async (docId: string) => {
+    if (confirm("Are you sure you want to delete this document?")) {
+      await deleteDoc.mutateAsync({ id: docId });
+    }
   };
 
   const handleNewDoc = () => {
     setIsCreating(true);
     setEditingDoc(null);
+    setViewingDoc(null);
   };
 
   return (
@@ -127,97 +149,164 @@ function DocsPageContent({ projectId }: { projectId: string }) {
       {/* Project Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-3">
-            <FileText className="h-6 w-6 text-gray-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Documentation</h1>
-              <p className="text-gray-600">Project documentation and notes</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileText className="h-6 w-6 text-gray-600" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Documentation</h1>
+                <p className="text-gray-600">Project documentation and notes</p>
+              </div>
             </div>
+            <Button onClick={handleNewDoc} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New Document
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto h-[calc(100vh-140px)]">
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b bg-white">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Documentation</h3>
-              <Button onClick={handleNewDoc} className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                New Document
-              </Button>
-            </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isLoading ? (
+          <div className="animate-pulse space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded"></div>
+            ))}
           </div>
-
-          {/* Docs List */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {isLoading ? (
-              <div className="animate-pulse space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-12 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            ) : docs?.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">No documents yet</p>
-                <Button onClick={handleNewDoc} className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Create First Document
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {docs?.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg border hover:shadow-sm transition-shadow"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{doc.title}</h4>
-                        <p className="text-sm text-gray-500">
-                          Updated {new Date(doc.updatedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditDoc(doc)}
-                        className="h-8 w-8 p-0"
-                      >
-                        Edit
-                      </Button>
+        ) : docs?.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No documents yet</h3>
+            <p className="text-gray-600 mb-6">Get started by creating your first document.</p>
+            <Button onClick={handleNewDoc} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create First Document
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {docs?.map((doc) => (
+              <div
+                key={doc.id}
+                className="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-6"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-gray-400" />
+                    <div>
+                      <h3 className="font-medium text-gray-900">{doc.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        Updated {new Date(doc.updatedAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
 
-          {/* Editor Modal */}
-          {(editingDoc || isCreating) && (
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-              <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
-                <MarkdownEditor
-                  initialTitle={editingDoc?.title || ""}
-                  initialContent={editingDoc?.content || ""}
-                  onSave={handleSave}
-                  onCancel={handleCancel}
-                  isSaving={createDoc.isPending || updateDoc.isPending}
-                />
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 line-clamp-3">
+                    {doc.content.substring(0, 150)}...
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewDoc(doc)}
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="h-3 w-3" />
+                      View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditDoc(doc)}
+                      className="flex items-center gap-1"
+                    >
+                      <Edit className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteDoc(doc.id)}
+                    className="text-red-600 border-red-300 hover:bg-red-50 flex items-center gap-1"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Editor Modal */}
+      {(editingDoc || isCreating) && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
+            <MarkdownEditor
+              initialTitle={editingDoc?.title || ""}
+              initialContent={editingDoc?.content || ""}
+              onSave={handleSave}
+              onCancel={handleCancel}
+              isSaving={createDoc.isPending || updateDoc.isPending}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Viewer Modal */}
+      {viewingDoc && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">{viewingDoc.title}</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditDoc(viewingDoc)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancel}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
               </div>
             </div>
-          )}
+            <div className="p-6 h-[calc(100%-80px)] overflow-y-auto">
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(viewingDoc.content) }} />
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      )}
     </div>
   );
+}
+
+// Simple markdown renderer (you might want to use a proper markdown library)
+function renderMarkdown(content: string): string {
+  return content
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
+    .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-6 mb-3">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>');
 }
 
 

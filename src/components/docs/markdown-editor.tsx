@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import MDEditor from "@uiw/react-md-editor";
 import { Button } from "~/components/ui/button";
-import { Save, X } from "lucide-react";
+import { X, Save } from "lucide-react";
 
 interface MarkdownEditorProps {
   initialTitle?: string;
@@ -32,27 +31,23 @@ export function MarkdownEditor({
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-white">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Document title..."
-          className="text-lg font-semibold bg-transparent border-none outline-none flex-1 mr-4"
-        />
+      <div className="flex items-center justify-between p-6 border-b">
+        <h2 className="text-xl font-semibold text-gray-900">Document Editor</h2>
         <div className="flex items-center gap-2">
           <Button
+            variant="outline"
             onClick={handleSave}
-            disabled={isSaving || !title.trim()}
+            disabled={!title.trim() || isSaving}
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : "Save"}
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={onCancel}
-            disabled={isSaving}
+            className="h-8 w-8 p-0"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -60,13 +55,46 @@ export function MarkdownEditor({
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        <MDEditor
-          value={content}
-          onChange={(val) => setContent(val || "")}
-          data-color-mode="light"
-          height="100%"
-        />
+      <div className="flex-1 flex">
+        {/* Title Input */}
+        <div className="w-full p-6">
+          <div className="mb-4">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              Document Title
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter document title"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              Content (Markdown)
+            </label>
+            <textarea
+              id="content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full h-[calc(100vh-300px)] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+              placeholder="Write your document content in Markdown..."
+            />
+          </div>
+
+          <div className="mt-4 text-sm text-gray-500">
+            <p>You can use Markdown syntax:</p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li><code>**bold**</code> for <strong>bold text</strong></li>
+              <li><code>*italic*</code> for <em>italic text</em></li>
+              <li><code># Heading</code> for headings</li>
+              <li><code>`code`</code> for inline code</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
