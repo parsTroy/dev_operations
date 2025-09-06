@@ -1,52 +1,154 @@
 "use client";
 
 import { Button } from "~/components/ui/button";
-import { ArrowLeft, BookOpen, Code, Users, Zap, Shield, GitBranch, Calendar, BarChart3 } from "lucide-react";
+import { ArrowLeft, BookOpen, Users, CheckSquare, FileText, CreditCard, BarChart3, MessageSquare, Settings, Shield, Zap, Target } from "lucide-react";
 import Link from "next/link";
 
 export function DocumentationPage() {
-  const features = [
+  const documentationSections = [
     {
-      icon: Code,
       title: "Getting Started",
-      description: "Learn how to set up your first project and invite team members",
-      link: "/documentation/getting-started"
+      description: "Learn the basics of dev_operations and set up your first project",
+      icon: BookOpen,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+      items: [
+        "Creating your first project",
+        "Inviting team members",
+        "Understanding project roles",
+        "Setting up notifications"
+      ]
     },
     {
+      title: "Project Management",
+      description: "Master project organization and task management",
+      icon: Target,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+      items: [
+        "Creating and managing projects",
+        "Task creation and assignment",
+        "Kanban board navigation",
+        "Project documentation"
+      ]
+    },
+    {
+      title: "Team Collaboration",
+      description: "Work effectively with your team members",
       icon: Users,
-      title: "Team Management",
-      description: "Understand roles, permissions, and how to manage your team",
-      link: "/documentation/team-management"
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+      items: [
+        "Inviting team members",
+        "Role-based permissions",
+        "Real-time chat features",
+        "Task comments and mentions"
+      ]
     },
     {
-      icon: Zap,
-      title: "Real-time Features",
-      description: "Learn about live updates, notifications, and real-time collaboration",
-      link: "/documentation/real-time-features"
+      title: "Task Management",
+      description: "Organize and track your work efficiently",
+      icon: CheckSquare,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+      items: [
+        "Creating and editing tasks",
+        "Drag and drop functionality",
+        "Task priorities and due dates",
+        "Task status management"
+      ]
     },
     {
-      icon: Shield,
-      title: "Security & Privacy",
-      description: "Understand our security measures and data protection policies",
-      link: "/documentation/security"
+      title: "Documentation",
+      description: "Create and manage project documentation",
+      icon: FileText,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-100",
+      items: [
+        "Markdown editor features",
+        "Creating documentation pages",
+        "Organizing project docs",
+        "Collaborative editing"
+      ]
     },
     {
-      icon: GitBranch,
-      title: "GitHub Integration",
-      description: "Connect your GitHub account and manage repositories",
-      link: "/documentation/github-integration"
+      title: "Billing & Subscriptions",
+      description: "Manage your subscription and billing",
+      icon: CreditCard,
+      color: "text-red-600",
+      bgColor: "bg-red-100",
+      items: [
+        "Understanding subscription tiers",
+        "Upgrading your plan",
+        "Billing dashboard",
+        "Payment methods"
+      ]
     },
     {
-      icon: Calendar,
-      title: "Project Timeline",
-      description: "Track project progress with timelines and milestones",
-      link: "/documentation/project-timeline"
-    },
-    {
+      title: "Analytics & Reports",
+      description: "Track your project performance and productivity",
       icon: BarChart3,
-      title: "Analytics",
-      description: "Monitor team productivity and project metrics",
-      link: "/documentation/analytics"
+      color: "text-teal-600",
+      bgColor: "bg-teal-100",
+      items: [
+        "Project analytics dashboard",
+        "Task completion tracking",
+        "Team productivity metrics",
+        "Performance insights"
+      ]
+    },
+    {
+      title: "Real-time Features",
+      description: "Stay connected with live updates and notifications",
+      icon: Zap,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+      items: [
+        "Live task updates",
+        "Real-time chat",
+        "Push notifications",
+        "Team activity feeds"
+      ]
+    },
+    {
+      title: "Account Settings",
+      description: "Customize your account and preferences",
+      icon: Settings,
+      color: "text-gray-600",
+      bgColor: "bg-gray-100",
+      items: [
+        "Profile management",
+        "Notification preferences",
+        "Security settings",
+        "Account preferences"
+      ]
+    }
+  ];
+
+  const quickStartGuides = [
+    {
+      title: "Create Your First Project",
+      description: "Step-by-step guide to setting up your first project",
+      href: "/",
+      icon: Target
+    },
+    {
+      title: "Invite Team Members",
+      description: "Learn how to add collaborators to your projects",
+      href: "/",
+      icon: Users
+    },
+    {
+      title: "Set Up Task Management",
+      description: "Organize your work with our Kanban board system",
+      href: "/",
+      icon: CheckSquare
+    },
+    {
+      title: "Configure Notifications",
+      description: "Stay updated with real-time notifications",
+      href: "/",
+      icon: MessageSquare
     }
   ];
 
@@ -89,47 +191,102 @@ export function DocumentationPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <Link
-              key={index}
-              href={feature.link}
-              className="group bg-white rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <feature.icon className="h-5 w-5 text-blue-600" />
+        {/* Quick Start Guides */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Start Guides</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {quickStartGuides.map((guide, index) => (
+              <Link key={index} href={guide.href} className="group">
+                <div className="bg-white rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-3">
+                    <guide.icon className="h-6 w-6 text-blue-600" />
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600">
+                      {guide.title}
+                    </h3>
                   </div>
+                  <p className="text-sm text-gray-600">{guide.description}</p>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-16 bg-blue-50 rounded-lg p-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Need Help?
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Can't find what you're looking for? Our support team is here to help.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/contact">
-                <Button size="lg">
-                  Contact Support
-                </Button>
-              </Link>
+        {/* Documentation Sections */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Documentation Sections</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {documentationSections.map((section, index) => (
+              <div key={index} className="bg-white rounded-lg p-6 shadow-sm border hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 ${section.bgColor} rounded-lg flex items-center justify-center`}>
+                    <section.icon className={`h-5 w-5 ${section.color}`} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                </div>
+                <p className="text-gray-600 mb-4">{section.description}</p>
+                <ul className="space-y-2">
+                  {section.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* API Reference */}
+        <div className="bg-white rounded-lg p-8 shadow-sm border mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">API Reference</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">REST API</h3>
+              <p className="text-gray-600 mb-4">
+                Access dev_operations programmatically with our REST API endpoints.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Projects management</li>
+                <li>• Task operations</li>
+                <li>• Team member management</li>
+                <li>• Real-time updates</li>
+              </ul>
             </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Webhooks</h3>
+              <p className="text-gray-600 mb-4">
+                Get notified when important events happen in your projects.
+              </p>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li>• Task status changes</li>
+                <li>• New team members</li>
+                <li>• Project updates</li>
+                <li>• Payment events</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Support Section */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Need More Help?
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Can't find what you're looking for? Our support team is here to help.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/contact">
+              <Button size="lg">
+                Contact Support
+              </Button>
+            </Link>
+            <Link href="/help">
+              <Button variant="outline" size="lg">
+                Help Center
+              </Button>
+            </Link>
           </div>
         </div>
       </main>
