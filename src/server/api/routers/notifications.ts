@@ -2,7 +2,17 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 // In-memory store for notifications (in production, use Redis or database)
-const notifications = new Map<string, any[]>();
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  data: Record<string, unknown>;
+  isRead: boolean;
+  createdAt: number;
+}
+
+const notifications = new Map<string, Notification[]>();
 
 export const notificationsRouter = createTRPCRouter({
   getByUser: protectedProcedure.query(async ({ ctx }) => {
@@ -43,7 +53,7 @@ export const notificationsRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       const userNotifications = notifications.get(input.userId) ?? [];
-      const notification = {
+      const notification: Notification = {
         id: Math.random().toString(36).substr(2, 9),
         type: input.type,
         title: input.title,

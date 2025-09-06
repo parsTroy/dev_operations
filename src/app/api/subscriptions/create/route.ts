@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { stripe } from "~/lib/stripe";
 import { db } from "~/server/db";
 import { auth } from "~/server/auth";
@@ -23,8 +24,8 @@ export async function POST(req: NextRequest) {
 
     if (!customer) {
       const stripeCustomer = await stripe.customers.create({
-        email: session.user.email || undefined,
-        name: session.user.name || undefined,
+        email: session.user.email ?? undefined,
+        name: session.user.name ?? undefined,
         metadata: {
           userId: session.user.id,
         },
@@ -34,8 +35,8 @@ export async function POST(req: NextRequest) {
         data: {
           userId: session.user.id,
           stripeCustomerId: stripeCustomer.id,
-          email: session.user.email || "",
-          name: session.user.name || null,
+          email: session.user.email ?? "",
+          name: session.user.name ?? null,
         },
       });
     }

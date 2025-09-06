@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { stripe } from "~/lib/stripe";
 import { db } from "~/server/db";
 import { env } from "~/env";
@@ -50,9 +51,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleSubscriptionChange(subscription: any) {
+async function handleSubscriptionChange(subscription: Record<string, unknown>) {
   const userSubscription = await db.userSubscription.findUnique({
-    where: { stripeSubscriptionId: subscription.id },
+    where: { stripeSubscriptionId: subscription.id as string },
     include: { user: true },
   });
 
@@ -61,10 +62,10 @@ async function handleSubscriptionChange(subscription: any) {
   await db.userSubscription.update({
     where: { id: userSubscription.id },
     data: {
-      status: subscription.status,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      status: subscription.status as string,
+      currentPeriodStart: new Date((subscription.current_period_start as number) * 1000),
+      currentPeriodEnd: new Date((subscription.current_period_end as number) * 1000),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end as boolean,
     },
   });
 
@@ -72,14 +73,14 @@ async function handleSubscriptionChange(subscription: any) {
   await db.user.update({
     where: { id: userSubscription.userId },
     data: {
-      subscriptionStatus: subscription.status,
+      subscriptionStatus: subscription.status as string,
     },
   });
 }
 
-async function handleSubscriptionDeleted(subscription: any) {
+async function handleSubscriptionDeleted(subscription: Record<string, unknown>) {
   const userSubscription = await db.userSubscription.findUnique({
-    where: { stripeSubscriptionId: subscription.id },
+    where: { stripeSubscriptionId: subscription.id as string },
   });
 
   if (!userSubscription) return;
@@ -102,8 +103,8 @@ async function handleSubscriptionDeleted(subscription: any) {
   });
 }
 
-async function handlePaymentSucceeded(invoice: any) {
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+async function handlePaymentSucceeded(invoice: Record<string, unknown>) {
+  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
   const userSubscription = await db.userSubscription.findUnique({
     where: { stripeSubscriptionId: subscription.id },
   });
@@ -114,18 +115,18 @@ async function handlePaymentSucceeded(invoice: any) {
   await db.paymentTransaction.create({
     data: {
       userId: userSubscription.userId,
-      stripePaymentIntentId: invoice.payment_intent,
-      amount: invoice.amount_paid / 100,
-      currency: invoice.currency,
+      stripePaymentIntentId: invoice.payment_intent as string,
+      amount: (invoice.amount_paid as number) / 100,
+      currency: invoice.currency as string,
       status: "succeeded",
-      description: invoice.description,
-      metadata: invoice.metadata,
+      description: invoice.description as string,
+      metadata: invoice.metadata as Record<string, string>,
     },
   });
 }
 
-async function handlePaymentFailed(invoice: any) {
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+async function handlePaymentFailed(invoice: Record<string, unknown>) {
+  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
   const userSubscription = await db.userSubscription.findUnique({
     where: { stripeSubscriptionId: subscription.id },
   });
@@ -136,12 +137,12 @@ async function handlePaymentFailed(invoice: any) {
   await db.paymentTransaction.create({
     data: {
       userId: userSubscription.userId,
-      stripePaymentIntentId: invoice.payment_intent,
-      amount: invoice.amount_due / 100,
-      currency: invoice.currency,
+      stripePaymentIntentId: invoice.payment_intent as string,
+      amount: (invoice.amount_due as number) / 100,
+      currency: invoice.currency as string,
       status: "failed",
-      description: invoice.description,
-      metadata: invoice.metadata,
+      description: invoice.description as string,
+      metadata: invoice.metadata as Record<string, string>,
     },
   });
 }
