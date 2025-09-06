@@ -1,6 +1,6 @@
 import "~/styles/globals.css";
 
-import { type Metadata } from "next";
+import { type Metadata, type Viewport } from "next";
 import { Geist } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 
@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   keywords: ["developer", "collaboration", "project management", "tasks", "documentation"],
   authors: [{ name: "dev_operations" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   openGraph: {
     title: "dev_operations - Developer Collaboration Hub",
@@ -37,6 +36,11 @@ export const metadata: Metadata = {
     description: "A collaborative app for developers to manage projects, tasks, and documentation",
     images: ["/public/og-image.jpg"], // Same image for Twitter
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 const geist = Geist({
