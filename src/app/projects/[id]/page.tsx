@@ -13,7 +13,8 @@ import { EditProjectModal } from "~/components/projects/edit-project-modal";
 import { DroppableColumn } from "~/components/tasks/droppable-column";
 import { ChatWindow } from "~/components/chat/chat-window";
 import { TeamMembers } from "~/components/team/team-members";
-import { ArrowLeft, Users, Calendar, Tag, FileText, Edit, MoreVertical, CheckSquare, MessageCircle } from "lucide-react";
+import { ProjectAnalytics } from "~/components/analytics/project-analytics";
+import { ArrowLeft, Users, Calendar, Tag, FileText, Edit, MoreVertical, CheckSquare, MessageCircle, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
@@ -33,7 +34,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [activeTask, setActiveTask] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"tasks" | "team">("tasks");
+  const [activeTab, setActiveTab] = useState<"tasks" | "team" | "analytics">("tasks");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -216,6 +217,19 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 Team
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab("analytics")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "analytics"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </div>
+            </button>
           </nav>
         </div>
       </div>
@@ -272,8 +286,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
               ) : null}
             </DragOverlay>
           </DndContext>
-        ) : (
+        ) : activeTab === "team" ? (
           <TeamMembers projectId={id} currentUserId={session?.user?.id || ""} />
+        ) : (
+          <ProjectAnalytics projectId={id} />
         )}
       </main>
       </div>

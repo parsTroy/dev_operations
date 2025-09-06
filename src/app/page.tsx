@@ -11,7 +11,7 @@ import { NotificationsDropdown } from "~/components/notifications/notifications-
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
 import { PerformanceMonitor } from "~/components/performance/performance-monitor";
-import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical } from "lucide-react";
+import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useState, Suspense } from "react";
 import { api } from "~/trpc/react";
@@ -137,7 +137,15 @@ function DashboardContent() {
                 </div>
               )}
             </div>
-            <NewProjectButton />
+            <div className="flex items-center gap-3">
+              <Link href="/analytics">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Analytics
+                </Button>
+              </Link>
+              <NewProjectButton />
+            </div>
           </div>
 
           {/* Projects Grid */}
