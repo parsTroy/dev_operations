@@ -13,7 +13,7 @@ interface CheckoutFormProps {
 }
 
 export function CheckoutForm({ priceId, onSuccess, onError }: CheckoutFormProps) {
-  const { stripe, elements, isLoading } = useStripeElements();
+  const { stripe, elements, loading } = useStripeElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,7 +107,7 @@ export function CheckoutForm({ priceId, onSuccess, onError }: CheckoutFormProps)
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
