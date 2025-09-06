@@ -22,13 +22,13 @@ export function PerformanceMonitor() {
       }
     };
 
-    // Load web-vitals library dynamically
-    import("web-vitals").then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(reportWebVitals);
-      getFID(reportWebVitals);
-      getFCP(reportWebVitals);
-      getLCP(reportWebVitals);
-      getTTFB(reportWebVitals);
+    // Load web-vitals library dynamically with correct imports
+    import("web-vitals").then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
+      onCLS(reportWebVitals);
+      onFCP(reportWebVitals);
+      onLCP(reportWebVitals);
+      onTTFB(reportWebVitals);
+      onINP(reportWebVitals);
     });
   }, []);
 

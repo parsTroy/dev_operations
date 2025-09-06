@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { PerformanceMonitor } from "~/components/performance/performance-monitor";
+import { PerformanceAnalytics } from "~/components/performance/performance-analytics";
 
 export const metadata: Metadata = {
   title: "dev_operations - Developer Collaboration Hub",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "dev_operations",
     images: [
       {
-        url: "/og-image.jpg", // Path to your generated image
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "dev_operations - Developer Collaboration Hub",
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "dev_operations - Developer Collaboration Hub",
     description: "A collaborative app for developers to manage projects, tasks, and documentation",
-    images: ["/public/og-image.jpg"], // Same image for Twitter
+    images: ["/og-image.jpg"],
   },
 };
 
@@ -54,9 +55,12 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//fonts.gstatic.com" />
       </head>
       <body>
         <PerformanceMonitor />
+        <PerformanceAnalytics />
         <SessionProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </SessionProvider>
