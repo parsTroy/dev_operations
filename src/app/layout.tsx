@@ -20,11 +20,22 @@ export const metadata: Metadata = {
     description: "A collaborative app for developers to manage projects, tasks, and documentation",
     type: "website",
     locale: "en_US",
+    url: "https://www.devoperations.ca",
+    siteName: "dev_operations",
+    images: [
+      {
+        url: "/og-image.jpg", // Path to your generated image
+        width: 1200,
+        height: 630,
+        alt: "dev_operations - Developer Collaboration Hub",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "dev_operations - Developer Collaboration Hub",
     description: "A collaborative app for developers to manage projects, tasks, and documentation",
+    images: ["/public/og-image.jpg"], // Same image for Twitter
   },
 };
 
