@@ -55,6 +55,7 @@
     "react-hook-form": "^7.62.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "resend": "^4.0.1",
     "server-only": "^0.0.1",
     "stripe": "^18.5.0",
     "superjson": "^2.2.1",
