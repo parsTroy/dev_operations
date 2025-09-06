@@ -4,99 +4,95 @@ import { TRPCError } from "@trpc/server";
 
 export const projectsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    const projects = await ctx.db.project.findMany({
+    return await ctx.db.project.findMany({
       where: {
         members: {
-          some: { userId: ctx.session.user.id },
+          some: {
+            userId: ctx.session.user.id,
+          },
         },
       },
       include: {
         _count: {
           select: {
-            members: true,
             tasks: true,
+            members: true,
           },
+        },
+        members: {
+          include: {
+            user: true,
+          },
+        },
+        // Include actual tasks data for dashboard
+        tasks: {
+          include: {
+            assignee: true,
+          },
+          orderBy: { updatedAt: "desc" },
         },
       },
       orderBy: { updatedAt: "desc" },
     });
-    return projects;
   }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const project = await ctx.db.project.findFirst({
+      return await ctx.db.project.findFirst({
         where: {
           id: input.id,
           members: {
-            some: { userId: ctx.session.user.id },
+            some: {
+              userId: ctx.session.user.id,
+            },
           },
         },
         include: {
           members: {
-            include: { user: true },
-          },
-          _count: {
-            select: {
-              members: true,
-              tasks: true,
+            include: {
+              user: true,
             },
+          },
+          tasks: {
+            include: {
+              assignee: true,
+              comments: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+            orderBy: { createdAt: "desc" },
+          },
+          docs: {
+            orderBy: { updatedAt: "desc" },
           },
         },
       });
-
-      if (!project) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
-      }
-
-      return project;
     }),
 
   create: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-        description: z.string().min(1),
-        tags: z.array(z.string()),
-      })
-    )
+    .input(z.object({
+      name: z.string().min(1),
+      description: z.string(),
+      tags: z.array(z.string()),
+    }))
     .mutation(async ({ ctx, input }) => {
-      // Check project limit
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: {
-          _count: { select: { projects: true } },
-          projectLimit: true,
-        },
-      });
-
-      if (user && user._count.projects >= user.projectLimit) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `You have reached your project limit of ${user.projectLimit}. Please upgrade your plan to create more projects.`,
-        });
-      }
-
       const project = await ctx.db.project.create({
         data: {
           name: input.name,
           description: input.description,
           tags: input.tags,
-          members: {
-            create: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
         },
-        include: {
-          _count: {
-            select: {
-              members: true,
-              tasks: true,
-            },
-          },
+      });
+
+      // Add the creator as an admin member
+      await ctx.db.projectMember.create({
+        data: {
+          projectId: project.id,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
@@ -104,73 +100,29 @@ export const projectsRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        name: z.string().min(1).optional(),
-        description: z.string().min(1).optional(),
-        tags: z.array(z.string()).optional(),
-      })
-    )
+    .input(z.object({
+      id: z.string(),
+      name: z.string().min(1),
+      description: z.string(),
+      tags: z.array(z.string()),
+    }))
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateData } = input;
-
-      // Check if user is admin of the project
-      const membership = await ctx.db.projectMember.findFirst({
-        where: {
-          projectId: id,
-          userId: ctx.session.user.id,
-          role: "ADMIN",
+      return await ctx.db.project.update({
+        where: { id: input.id },
+        data: {
+          name: input.name,
+          description: input.description,
+          tags: input.tags,
         },
       });
-
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only project admins can update project details",
-        });
-      }
-
-      const project = await ctx.db.project.update({
-        where: { id },
-        data: updateData,
-        include: {
-          _count: {
-            select: {
-              members: true,
-              tasks: true,
-            },
-          },
-        },
-      });
-
-      return project;
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      // Check if user is admin of the project
-      const membership = await ctx.db.projectMember.findFirst({
-        where: {
-          projectId: input.id,
-          userId: ctx.session.user.id,
-          role: "ADMIN",
-        },
-      });
-
-      if (!membership) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Only project admins can delete projects",
-        });
-      }
-
-      await ctx.db.project.delete({
+      return await ctx.db.project.delete({
         where: { id: input.id },
       });
-
-      return { success: true };
     }),
 
   inviteMember: protectedProcedure
