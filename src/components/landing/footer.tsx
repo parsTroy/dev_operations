@@ -14,16 +14,16 @@ export function Footer() {
               Manage projects, tasks, and team communication in one place.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="https://github.com/parsTroy/dev_operations" className="text-gray-400 hover:text-white transition-colors">
                 <Github className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              {/* <a href="#" className="text-gray-400 hover:text-white transition-colors">
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="" className="text-gray-400 hover:text-white transition-colors">
                 <Linkedin className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              </a> */}
+              <a href="mailto:support@devoperations.ca" className="text-gray-400 hover:text-white transition-colors">
                 <Mail className="h-5 w-5" />
               </a>
             </div>
