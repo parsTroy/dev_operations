@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { Button } from "~/components/ui/button";
-import { Edit, MoreVertical, GripVertical, User, Calendar, AlertCircle } from "lucide-react";
-import { EditTaskModal } from "./edit-task-modal";
+import { Edit, User, Calendar, AlertCircle } from "lucide-react";
 import { useTaskModalContext } from "~/components/tasks/task-modal-provider";
 
 interface DraggableTaskCardProps {
@@ -21,16 +19,8 @@ interface DraggableTaskCardProps {
 }
 
 export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
-  const { openModal } = useTaskModalContext();
-  const [showMenu, setShowMenu] = useState(false);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
+  const { openModal, setEditingTask } = useTaskModalContext();
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
 
@@ -53,109 +43,69 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTask(task);
+    openModal();
+  };
+
   return (
-    <>
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing ${
-          isDragging ? "opacity-50" : ""
-        }`}
-      >
-        <div className="flex items-start justify-between mb-2">
-          <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal();
-            }}
-            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
-        </div>
-
-        {task.description && (
-          <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
-              {task.priority}
-            </span>
-            {task.dueDate && (
-              <div className={`flex items-center gap-1 text-xs ${
-                isOverdue ? "text-red-600" : "text-gray-500"
-              }`}>
-                <Calendar className="h-3 w-3" />
-                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Assigned Team Member */}
-        {task.assignee && (
-          <div className="mt-2 flex items-center gap-2">
-            <User className="h-3 w-3 text-gray-400" />
-            <span className="text-xs text-gray-600">
-              {task.assignee.name || 'Unknown User'}
-            </span>
-          </div>
-        )}
-
-        {/* Overdue Warning */}
-        {isOverdue && (
-          <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
-            <AlertCircle className="h-3 w-3" />
-            <span>Overdue</span>
-          </div>
-        )}
-      </div>
-
-      {/* Non-draggable menu area */}
-      <div className="relative ml-2 flex-shrink-0">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <h4 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">{task.title}</h4>
         <Button
           variant="ghost"
           size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMenu(!showMenu);
-          }}
-          className="h-6 w-6 p-0"
+          onClick={handleEditClick}
+          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0"
         >
-          <MoreVertical className="h-3 w-3" />
+          <Edit className="h-3 w-3" />
         </Button>
-        
-        {showMenu && (
-          <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border z-10">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                openModal();
-                setShowMenu(false);
-              }}
-              className="w-full justify-start text-xs"
-            >
-              <Edit className="h-3 w-3 mr-2" />
-              Edit
-            </Button>
-          </div>
-        )}
       </div>
 
-      {/* Overlay to close menu */}
-      {showMenu && (
-        <div
-          className="fixed inset-0 z-5"
-          onClick={() => setShowMenu(false)}
-        />
+      {task.description && (
+        <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
       )}
-    </>
+
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
+            {task.priority}
+          </span>
+          {task.dueDate && (
+            <div className={`flex items-center gap-1 text-xs ${
+              isOverdue ? "text-red-600" : "text-gray-500"
+            }`}>
+              <Calendar className="h-3 w-3" />
+              <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Assigned Team Member - Always show this section for consistency */}
+      <div className="mt-2 flex items-center gap-2">
+        <User className="h-3 w-3 text-gray-400" />
+        <span className="text-xs text-gray-600">
+          {task.assignee ? (task.assignee.name || 'Unknown User') : 'Unassigned'}
+        </span>
+      </div>
+
+      {/* Overdue Warning */}
+      {isOverdue && (
+        <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
+          <AlertCircle className="h-3 w-3" />
+          <span>Overdue</span>
+        </div>
+      )}
+    </div>
   );
 }
