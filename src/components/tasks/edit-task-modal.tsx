@@ -34,7 +34,7 @@ export function EditTaskModal({ task, projectId, onClose }: EditTaskModalProps) 
       title: task.title,
       description: task.description || "",
       priority: task.priority,
-      dueDate: task.dueDate ? task.dueDate.toISOString().split('T')[0] : "",
+      dueDate: task.dueDate ? task.dueDate.toISOString().split('T')[0] ?? "" : "",
       assignedTo: task.assignedTo || "",
     });
   }, [task]);
