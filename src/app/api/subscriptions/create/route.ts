@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
         data: {
           userId: session.user.id,
           stripeCustomerId: stripeCustomer.id,
+          email: session.user.email || "",
+          name: session.user.name || null,
         },
       });
     }
