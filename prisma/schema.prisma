@@ -45,6 +45,10 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  subscriptionTier  String   @default("free") // "free", "pro", "lifetime"
+  projectLimit      Int      @default(5)
+  stripeCustomerId  String?
+  subscriptionStatus String? // "active", "canceled", "past_due", "unpaid"
   accounts      Account[]
   sessions      Session[]
   projects      ProjectMember[]
@@ -54,6 +58,10 @@ model User {
   mentions      Mention[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  subscriptions     UserSubscription[]
+  stripeCustomer    StripeCustomer?
+  paymentTransactions PaymentTransaction[]
+  usageTracking     UsageTracking[]
 }
 
 model VerificationToken {
@@ -160,4 +168,80 @@ model Mention {
   message   ChatMessage  @relation(fields: [messageId], references: [id])
   user      User         @relation(fields: [userId], references: [id])
   createdAt DateTime     @default(now())
+}
+
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal
+  interval    String   // "month", "year", "lifetime"
+  intervalCount Int    @default(1)
+  stripePriceId String @unique
+  features    Json?    // Store plan features as JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id                String   @id @default(cuid())
+  userId            String
+  subscriptionPlanId String
+  stripeCustomerId  String
+  stripeSubscriptionId String @unique
+  status            String   // "active", "canceled", "past_due", "unpaid"
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
+  
+  @@unique([userId, subscriptionPlanId])
+}
+
+model StripeCustomer {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  stripeCustomerId String  @unique
+  email           String
+  name            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PaymentTransaction {
+  id                String   @id @default(cuid())
+  userId            String
+  stripePaymentIntentId String @unique
+  amount            Decimal
+  currency          String   @default("usd")
+  status            String   // "succeeded", "failed", "canceled"
+  description       String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UsageTracking {
+  id          String   @id @default(cuid())
+  userId      String
+  feature     String   // "projects_created", "tasks_created", etc.
+  count       Int      @default(1)
+  period      String   // "month", "year"
+  periodStart DateTime
+  periodEnd   DateTime
+  createdAt   DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, feature, period, periodStart])
 }

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
 import { X, Plus } from "lucide-react";
+import Link from "next/link";
 
 interface NewProjectFormProps {
   onClose: () => void;
@@ -15,17 +15,21 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
   const [description, setDescription] = useState("");
   const [tags, setTags] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
 
   const utils = api.useUtils();
+  const { data: user } = api.subscriptions.getCurrentSubscription.useQuery();
+  
   const createProject = api.projects.create.useMutation({
     onSuccess: async () => {
       // Only invalidate the projects list
       await utils.projects.getAll.invalidate();
       onClose();
-      router.refresh();
     },
     onError: (error) => {
+      // Handle project limit error
+      if (error.message.includes("project limit")) {
+        alert(error.message);
+      }
       console.error("Error creating project:", error);
       setIsSubmitting(false);
     },
@@ -33,25 +37,19 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !description.trim()) return;
+    if (isSubmitting) return;
 
     setIsSubmitting(true);
-    const tagArray = tags
+    const tagsArray = tags
       .split(",")
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
 
-    try {
-      await createProject.mutateAsync({
-        name: name.trim(),
-        description: description.trim(),
-        tags: tagArray,
-      });
-    } catch (error) {
-      console.error("Error creating project:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await createProject.mutateAsync({
+      name,
+      description,
+      tags: tagsArray,
+    });
   };
 
   return (
@@ -70,6 +68,17 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {user && user._count?.projects >= user.projectLimit && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                You've reached your project limit of {user.projectLimit}. 
+                <Link href="/pricing" className="text-blue-600 hover:text-blue-800 ml-1">
+                  Upgrade your plan
+                </Link> to create more projects.
+              </p>
+            </div>
+          )}
+
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Project Name

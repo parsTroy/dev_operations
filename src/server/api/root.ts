@@ -6,6 +6,8 @@ import { docsRouter } from "~/server/api/routers/docs";
 import { notificationsRouter } from "~/server/api/routers/notifications";
 import { chatRouter } from "~/server/api/routers/chat";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+import { subscriptionsRouter } from "~/server/api/routers/subscriptions";
+
 
 /**
  * This is the primary router for your server.
@@ -20,6 +22,7 @@ export const appRouter = createTRPCRouter({
   docs: docsRouter,
   notifications: notificationsRouter,
   chat: chatRouter,
+  subscriptions: subscriptionsRouter,
 });
 
 // export type definition of API
