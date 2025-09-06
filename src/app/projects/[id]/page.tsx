@@ -2,7 +2,7 @@
 
 import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { SignOutButton } from "~/components/auth/sign-out-button";
 import { TaskModalProvider } from "~/components/tasks/task-modal-provider";
@@ -30,11 +30,23 @@ interface ProjectPageProps {
 export default function ProjectPage({ params }: ProjectPageProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id } = use(params);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [activeTask, setActiveTask] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"tasks" | "team" | "analytics">("tasks");
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
+
+  // Get highlighted task from URL params
+  useEffect(() => {
+    const highlightParam = searchParams.get('highlight');
+    if (highlightParam) {
+      setHighlightedTaskId(highlightParam);
+      // Clear highlight after 3 seconds
+      setTimeout(() => setHighlightedTaskId(null), 3000);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -244,18 +256,21 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 title="To Do"
                 tasks={tasksByStatus.TODO}
                 projectId={id}
+                highlightedTaskId={highlightedTaskId}
               />
               <DroppableColumn
                 id="IN_PROGRESS"
                 title="In Progress"
                 tasks={tasksByStatus.IN_PROGRESS}
                 projectId={id}
+                highlightedTaskId={highlightedTaskId}
               />
               <DroppableColumn
                 id="DONE"
                 title="Done"
                 tasks={tasksByStatus.DONE}
                 projectId={id}
+                highlightedTaskId={highlightedTaskId}
               />
             </div>
             

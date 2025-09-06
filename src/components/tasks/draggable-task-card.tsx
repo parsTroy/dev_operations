@@ -16,9 +16,10 @@ interface DraggableTaskCardProps {
     assignee: { name: string | null } | null;
   };
   projectId: string;
+  isHighlighted?: boolean;
 }
 
-export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
+export function DraggableTaskCard({ task, projectId, isHighlighted = false }: DraggableTaskCardProps) {
   const { openModal, setEditingTask } = useTaskModalContext();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
@@ -54,8 +55,12 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow group relative ${
+      {...listeners}
+      {...attributes}
+      className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-all duration-300 cursor-grab active:cursor-grabbing group relative ${
         isDragging ? "opacity-50" : ""
+      } ${
+        isHighlighted ? "ring-2 ring-blue-500 bg-blue-50 animate-pulse" : ""
       }`}
     >
       {/* Edit button - positioned absolutely outside draggable area */}
@@ -69,11 +74,7 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
       </Button>
 
       {/* Draggable content area */}
-      <div 
-        {...listeners}
-        {...attributes}
-        className="cursor-grab active:cursor-grabbing pr-8"
-      >
+      <div className="pr-8">
         <div className="mb-2">
           <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
         </div>

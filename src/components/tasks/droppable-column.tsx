@@ -16,39 +16,33 @@ interface DroppableColumnProps {
     assignee: { name: string | null } | null;
   }>;
   projectId: string;
+  highlightedTaskId?: string | null;
 }
 
-export function DroppableColumn({ id, title, tasks, projectId }: DroppableColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({
+export function DroppableColumn({ id, title, tasks, projectId, highlightedTaskId }: DroppableColumnProps) {
+  const { isOver, setNodeRef } = useDroppable({
     id,
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">{title}</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
-          {tasks.length}
-        </span>
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       <div
         ref={setNodeRef}
-        className={`space-y-3 min-h-[200px] ${
-          isOver ? "bg-blue-50 border-2 border-blue-300 border-dashed rounded-lg" : ""
+        className={`min-h-[200px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+          isOver ? "border-blue-400 bg-blue-50" : "border-gray-200"
         }`}
       >
-        {tasks.map((task) => (
-          <DraggableTaskCard
-            key={task.id}
-            task={task}
-            projectId={projectId}
-          />
-        ))}
-        {tasks.length === 0 && (
-          <div className="text-center text-gray-500 text-sm py-8">
-            No tasks
-          </div>
-        )}
+        <div className="space-y-3">
+          {tasks.map((task) => (
+            <DraggableTaskCard
+              key={task.id}
+              task={task}
+              projectId={projectId}
+              isHighlighted={highlightedTaskId === task.id}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

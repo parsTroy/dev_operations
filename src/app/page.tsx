@@ -11,7 +11,7 @@ import { NotificationsDropdown } from "~/components/notifications/notifications-
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
 import { PerformanceMonitor } from "~/components/performance/performance-monitor";
-import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical, BarChart3, Calendar, AlertTriangle, Clock, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, CheckSquare, FileText, Edit, MoreVertical, BarChart3, Calendar, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState, Suspense } from "react";
 import { api } from "~/trpc/react";
@@ -82,9 +82,35 @@ function DashboardStats() {
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const recentTasks = allTasks.filter(task => 
     new Date(task.updatedAt) >= threeDaysAgo
-  ).slice(0, 5);
+  ).slice(0, 4); // Limit to 4 tasks for grid layout
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "HIGH":
+        return "bg-red-500";
+      case "MEDIUM":
+        return "bg-yellow-500";
+      case "LOW":
+        return "bg-green-500";
+      default:
+        return "bg-gray-400";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "DONE":
+        return "bg-green-500";
+      case "IN_PROGRESS":
+        return "bg-yellow-500";
+      case "TODO":
+        return "bg-gray-400";
+      default:
+        return "bg-gray-400";
+    }
+  };
 
   return (
     <div className="mb-8">
@@ -208,36 +234,39 @@ function DashboardStats() {
         )}
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Activity - Grid Layout */}
       {recentTasks.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {recentTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    task.status === 'DONE' ? 'bg-green-500' :
-                    task.status === 'IN_PROGRESS' ? 'bg-yellow-500' : 'bg-gray-400'
-                  }`}></div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                    <p className="text-xs text-gray-500">
+              <Link
+                key={task.id}
+                href={`/projects/${task.projectId}?highlight=${task.id}`}
+                className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} flex-shrink-0 mt-1`}></div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {task.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-1">
                       {task.assignee?.name || 'Unassigned'} • {task.priority} priority
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
-                    {new Date(task.updatedAt).toLocaleDateString()}
-                  </span>
-                  <Link href={`/projects/${task.projectId}`}>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      →
-                    </Button>
-                  </Link>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(task.updatedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <ArrowRight className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
