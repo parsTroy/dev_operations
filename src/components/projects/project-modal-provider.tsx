@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { useProjectModal } from "~/hooks/use-project-modal";
 import { NewProjectForm } from "./new-project-form";
 
@@ -25,12 +25,12 @@ interface ProjectModalProviderProps {
 }
 
 export function ProjectModalProvider({ children }: ProjectModalProviderProps) {
-  const modal = useProjectModal();
+  const { isOpen, openModal, closeModal } = useProjectModal();
 
   return (
-    <ProjectModalContext.Provider value={modal}>
+    <ProjectModalContext.Provider value={{ isOpen, openModal, closeModal }}>
       {children}
-      {modal.isOpen && <NewProjectForm onClose={modal.closeModal} />}
+      {isOpen && <NewProjectForm onClose={closeModal} />}
     </ProjectModalContext.Provider>
   );
 }
