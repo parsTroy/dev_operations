@@ -45,6 +45,7 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     setEditingTask(task);
     openModal();
   };
@@ -53,59 +54,66 @@ export function DraggableTaskCard({ task, projectId }: DraggableTaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group ${
+      className={`bg-white rounded-lg p-3 border shadow-sm hover:shadow-md transition-shadow group relative ${
         isDragging ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="font-medium text-gray-900 text-sm line-clamp-2 flex-1">{task.title}</h4>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleEditClick}
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0"
-        >
-          <Edit className="h-3 w-3" />
-        </Button>
-      </div>
+      {/* Edit button - positioned absolutely outside draggable area */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleEditClick}
+        className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+      >
+        <Edit className="h-3 w-3" />
+      </Button>
 
-      {task.description && (
-        <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
-      )}
+      {/* Draggable content area */}
+      <div 
+        {...listeners}
+        {...attributes}
+        className="cursor-grab active:cursor-grabbing pr-8"
+      >
+        <div className="mb-2">
+          <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
+        </div>
 
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
-            {task.priority}
+        {task.description && (
+          <p className="text-gray-600 text-xs mb-3 line-clamp-2">{task.description}</p>
+        )}
+
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className={`text-xs px-2 py-1 rounded-full border ${getPriorityColor(task.priority)}`}>
+              {task.priority}
+            </span>
+            {task.dueDate && (
+              <div className={`flex items-center gap-1 text-xs ${
+                isOverdue ? "text-red-600" : "text-gray-500"
+              }`}>
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Assigned Team Member - Always show this section for consistency */}
+        <div className="mt-2 flex items-center gap-2">
+          <User className="h-3 w-3 text-gray-400" />
+          <span className="text-xs text-gray-600">
+            {task.assignee ? (task.assignee.name || 'Unknown User') : 'Unassigned'}
           </span>
-          {task.dueDate && (
-            <div className={`flex items-center gap-1 text-xs ${
-              isOverdue ? "text-red-600" : "text-gray-500"
-            }`}>
-              <Calendar className="h-3 w-3" />
-              <span>{new Date(task.dueDate).toLocaleDateString()}</span>
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* Assigned Team Member - Always show this section for consistency */}
-      <div className="mt-2 flex items-center gap-2">
-        <User className="h-3 w-3 text-gray-400" />
-        <span className="text-xs text-gray-600">
-          {task.assignee ? (task.assignee.name || 'Unknown User') : 'Unassigned'}
-        </span>
+        {/* Overdue Warning */}
+        {isOverdue && (
+          <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
+            <AlertCircle className="h-3 w-3" />
+            <span>Overdue</span>
+          </div>
+        )}
       </div>
-
-      {/* Overdue Warning */}
-      {isOverdue && (
-        <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
-          <AlertCircle className="h-3 w-3" />
-          <span>Overdue</span>
-        </div>
-      )}
     </div>
   );
 }
