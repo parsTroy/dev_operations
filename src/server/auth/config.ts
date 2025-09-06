@@ -51,5 +51,25 @@ export const authConfig = {
         id: user.id,
       },
     }),
+    // Ensure redirects always use www version
+    redirect: ({ url, baseUrl }) => {
+      // If url is relative, make it absolute with baseUrl
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`;
+      }
+      
+      // If url is on the same origin, normalize to www version
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      
+      // For external URLs, return as is
+      return url;
+    },
+  },
+  // Ensure we always use the www version for callbacks
+  pages: {
+    signIn: '/api/auth/signin',
+    error: '/api/auth/error',
   },
 } satisfies NextAuthConfig;
