@@ -3,6 +3,12 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
+  const pathname = request.nextUrl.pathname;
+  
+  // Skip middleware for auth routes to prevent redirect loops
+  if (pathname.startsWith('/api/auth/')) {
+    return NextResponse.next();
+  }
   
   // Only handle devoperations.ca (without www)
   if (host === 'devoperations.ca') {
@@ -19,11 +25,11 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
+     * - api/auth (auth routes - to prevent redirect loops)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
   ],
 };
