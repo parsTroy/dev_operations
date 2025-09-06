@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { useTaskModal } from "~/hooks/use-task-modal";
 import { NewTaskForm } from "./new-task-form";
 
@@ -26,12 +26,12 @@ interface TaskModalProviderProps {
 }
 
 export function TaskModalProvider({ children, projectId }: TaskModalProviderProps) {
-  const modal = useTaskModal();
+  const { isOpen, openModal, closeModal } = useTaskModal();
 
   return (
-    <TaskModalContext.Provider value={modal}>
+    <TaskModalContext.Provider value={{ isOpen, openModal, closeModal }}>
       {children}
-      {modal.isOpen && <NewTaskForm onClose={modal.closeModal} projectId={projectId} />}
+      {isOpen && <NewTaskForm onClose={closeModal} projectId={projectId} />}
     </TaskModalContext.Provider>
   );
 }

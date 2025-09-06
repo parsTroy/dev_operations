@@ -13,7 +13,7 @@ export function NotificationsDropdown() {
   const markAsRead = api.notifications.markAsRead.useMutation();
   const markAllAsRead = api.notifications.markAllAsRead.useMutation();
 
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead.mutateAsync({ id });
@@ -78,7 +78,7 @@ export function NotificationsDropdown() {
                   <div
                     key={notification.id}
                     className={`p-4 hover:bg-gray-50 ${
-                      !notification.read ? "bg-blue-50" : ""
+                      !notification.isRead ? "bg-blue-50" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -93,7 +93,7 @@ export function NotificationsDropdown() {
                           {new Date(notification.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      {!notification.read && (
+                      {!notification.isRead && (
                         <Button
                           variant="ghost"
                           size="sm"

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { stripe } from "~/lib/stripe";
 import { db } from "~/server/db";
 import { env } from "~/env";
@@ -28,16 +29,16 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "customer.subscription.created":
       case "customer.subscription.updated":
-        await handleSubscriptionChange(event.data.object);
+        await handleSubscriptionChange(event.data.object as any);
         break;
       case "customer.subscription.deleted":
-        await handleSubscriptionDeleted(event.data.object);
+        await handleSubscriptionDeleted(event.data.object as any);
         break;
       case "invoice.payment_succeeded":
-        await handlePaymentSucceeded(event.data.object);
+        await handlePaymentSucceeded(event.data.object as any);
         break;
       case "invoice.payment_failed":
-        await handlePaymentFailed(event.data.object);
+        await handlePaymentFailed(event.data.object as any);
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);

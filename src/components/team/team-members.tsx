@@ -53,7 +53,7 @@ export function TeamMembers({ projectId, currentUserId }: TeamMembersProps) {
 
   const handleRemoveMember = async (memberId: string) => {
     if (confirm("Are you sure you want to remove this member?")) {
-      await removeMember.mutateAsync({ memberId });
+      await removeMember.mutateAsync({ projectId, memberId });
     }
   };
 

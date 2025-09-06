@@ -51,8 +51,8 @@ export const subscriptionsRouter = createTRPCRouter({
 
       try {
         const customer = await stripe.customers.create({
-          email: user.email!,
-          name: user.name || undefined,
+          email: user.email ?? undefined,
+          name: user.name ?? undefined,
           metadata: {
             userId: user.id,
           },
@@ -67,8 +67,8 @@ export const subscriptionsRouter = createTRPCRouter({
           data: {
             userId: user.id,
             stripeCustomerId: customer.id,
-            email: user.email!,
-            name: user.name,
+            email: user.email ?? "",
+            name: user.name ?? null,
           },
         });
 
@@ -129,10 +129,10 @@ export const subscriptionsRouter = createTRPCRouter({
           subscriptionPlan = await ctx.db.subscriptionPlan.create({
             data: {
               name: product.name,
-              description: product.description || undefined,
+              description: product.description ?? undefined,
               price: price.unit_amount! / 100, // Convert from cents
-              interval: price.recurring?.interval || "lifetime",
-              intervalCount: price.recurring?.interval_count || 1,
+              interval: price.recurring?.interval ?? "lifetime",
+              intervalCount: price.recurring?.interval_count ?? 1,
               stripePriceId: input.priceId,
               features: product.metadata,
             },
@@ -140,16 +140,16 @@ export const subscriptionsRouter = createTRPCRouter({
         }
 
         // Create user subscription record
-        const userSubscription = await ctx.db.userSubscription.create({
+        await ctx.db.userSubscription.create({
           data: {
             userId: user.id,
             subscriptionPlanId: subscriptionPlan.id,
             stripeCustomerId: user.stripeCustomerId,
             stripeSubscriptionId: subscription.id,
             status: subscription.status,
-            currentPeriodStart: new Date(subscription.current_period_start * 1000),
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            currentPeriodStart: new Date((subscription as unknown as { current_period_start: number }).current_period_start * 1000),
+            currentPeriodEnd: new Date((subscription as unknown as { current_period_end: number }).current_period_end * 1000),
+            cancelAtPeriodEnd: (subscription as unknown as { cancel_at_period_end: boolean }).cancel_at_period_end,
           },
         });
 
@@ -168,7 +168,7 @@ export const subscriptionsRouter = createTRPCRouter({
 
         return {
           subscriptionId: subscription.id,
-          clientSecret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
+          clientSecret: (subscription.latest_invoice as unknown as { payment_intent: { client_secret: string } })?.payment_intent?.client_secret,
           status: subscription.status,
         };
       } catch (error) {

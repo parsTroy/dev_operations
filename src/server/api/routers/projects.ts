@@ -1,23 +1,16 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 export const projectsRouter = createTRPCRouter({
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.project.findMany({
+    const projects = await ctx.db.project.findMany({
       where: {
         members: {
-          some: {
-            userId: ctx.session.user.id,
-          },
+          some: { userId: ctx.session.user.id },
         },
       },
       include: {
-        members: {
-          include: {
-            user: true,
-          },
-        },
         _count: {
           select: {
             members: true,
@@ -25,51 +18,67 @@ export const projectsRouter = createTRPCRouter({
           },
         },
       },
-      orderBy: {
-        updatedAt: "desc",
-      },
+      orderBy: { updatedAt: "desc" },
     });
+    return projects;
   }),
+
+  getById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await ctx.db.project.findFirst({
+        where: {
+          id: input.id,
+          members: {
+            some: { userId: ctx.session.user.id },
+          },
+        },
+        include: {
+          members: {
+            include: { user: true },
+          },
+          _count: {
+            select: {
+              members: true,
+              tasks: true,
+            },
+          },
+        },
+      });
+
+      if (!project) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Project not found" });
+      }
+
+      return project;
+    }),
 
   create: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(1, "Project name is required"),
-        description: z.string().min(1, "Project description is required"),
-        tags: z.array(z.string()).default([]),
+        name: z.string().min(1),
+        description: z.string().min(1),
+        tags: z.array(z.string()),
       })
     )
     .mutation(async ({ ctx, input }) => {
       // Check project limit
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
-        select: { 
-          subscriptionTier: true, 
+        select: {
+          _count: { select: { projects: true } },
           projectLimit: true,
-          _count: { 
-            select: { 
-              projects: true 
-            } 
-          }
-        }
+        },
       });
 
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      // Check if user has reached their project limit
-      if (user._count.projects >= user.projectLimit) {
+      if (user && user._count.projects >= user.projectLimit) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: `You have reached your project limit of ${user.projectLimit}. Upgrade your plan to create more projects.`,
+          message: `You have reached your project limit of ${user.projectLimit}. Please upgrade your plan to create more projects.`,
         });
       }
 
-      return ctx.db.project.create({
+      const project = await ctx.db.project.create({
         data: {
           name: input.name,
           description: input.description,
@@ -82,56 +91,14 @@ export const projectsRouter = createTRPCRouter({
           },
         },
         include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
           _count: {
             select: {
-              tasks: true,
               members: true,
+              tasks: true,
             },
           },
         },
       });
-    }),
-
-  getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const project = await ctx.db.project.findFirst({
-        where: {
-          id: input.id,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-            },
-          },
-        },
-        include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
-          tasks: {
-            include: {
-              assignee: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-          },
-        },
-      });
-
-      if (!project) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Project not found",
-        });
-      }
 
       return project;
     }),
@@ -140,81 +107,70 @@ export const projectsRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        name: z.string().min(1),
-        description: z.string(),
-        tags: z.array(z.string()),
+        name: z.string().min(1).optional(),
+        description: z.string().min(1).optional(),
+        tags: z.array(z.string()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      const { id, ...updateData } = input;
+
       // Check if user is admin of the project
-      const project = await ctx.db.project.findFirst({
+      const membership = await ctx.db.projectMember.findFirst({
         where: {
-          id: input.id,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
+          projectId: id,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
-      if (!project) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have permission to update this project",
+          message: "Only project admins can update project details",
         });
       }
 
-      return ctx.db.project.update({
-        where: { id: input.id },
-        data: {
-          name: input.name,
-          description: input.description,
-          tags: input.tags,
-        },
+      const project = await ctx.db.project.update({
+        where: { id },
+        data: updateData,
         include: {
-          members: {
-            include: {
-              user: true,
-            },
-          },
           _count: {
             select: {
-              tasks: true,
               members: true,
+              tasks: true,
             },
           },
         },
       });
+
+      return project;
     }),
 
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin of the project
-      const project = await ctx.db.project.findFirst({
+      const membership = await ctx.db.projectMember.findFirst({
         where: {
-          id: input.id,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
+          projectId: input.id,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
-      if (!project) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have permission to delete this project",
+          message: "Only project admins can delete projects",
         });
       }
 
-      return ctx.db.project.delete({
+      await ctx.db.project.delete({
         where: { id: input.id },
       });
+
+      return { success: true };
     }),
 
   inviteMember: protectedProcedure
@@ -222,27 +178,23 @@ export const projectsRouter = createTRPCRouter({
       z.object({
         projectId: z.string(),
         email: z.string().email(),
-        role: z.enum(["ADMIN", "MEMBER", "VIEWER"]),
+        role: z.enum(["MEMBER", "VIEWER"]),
       })
     )
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin of the project
-      const project = await ctx.db.project.findFirst({
+      const membership = await ctx.db.projectMember.findFirst({
         where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
+          projectId: input.projectId,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
-      if (!project) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have permission to invite members to this project",
+          message: "Only project admins can invite members",
         });
       }
 
@@ -259,30 +211,30 @@ export const projectsRouter = createTRPCRouter({
       }
 
       // Check if user is already a member
-      const existingMember = await ctx.db.projectMember.findFirst({
+      const existingMembership = await ctx.db.projectMember.findFirst({
         where: {
           projectId: input.projectId,
           userId: user.id,
         },
       });
 
-      if (existingMember) {
+      if (existingMembership) {
         throw new TRPCError({
           code: "CONFLICT",
           message: "User is already a member of this project",
         });
       }
 
-      return ctx.db.projectMember.create({
+      const projectMember = await ctx.db.projectMember.create({
         data: {
           projectId: input.projectId,
           userId: user.id,
           role: input.role,
         },
-        include: {
-          user: true,
-        },
+        include: { user: true },
       });
+
+      return projectMember;
     }),
 
   removeMember: protectedProcedure
@@ -294,28 +246,28 @@ export const projectsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin of the project
-      const project = await ctx.db.project.findFirst({
+      const membership = await ctx.db.projectMember.findFirst({
         where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
+          projectId: input.projectId,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
-      if (!project) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have permission to remove members from this project",
+          message: "Only project admins can remove members",
         });
       }
 
-      return ctx.db.projectMember.delete({
-        where: { id: input.memberId },
+      await ctx.db.projectMember.delete({
+        where: {
+          id: input.memberId,
+        },
       });
+
+      return { success: true };
     }),
 
   updateMemberRole: protectedProcedure
@@ -328,31 +280,27 @@ export const projectsRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Check if user is admin of the project
-      const project = await ctx.db.project.findFirst({
+      const membership = await ctx.db.projectMember.findFirst({
         where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-              role: "ADMIN",
-            },
-          },
+          projectId: input.projectId,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
         },
       });
 
-      if (!project) {
+      if (!membership) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "You don't have permission to update member roles in this project",
+          message: "Only project admins can update member roles",
         });
       }
 
-      return ctx.db.projectMember.update({
+      const projectMember = await ctx.db.projectMember.update({
         where: { id: input.memberId },
         data: { role: input.role },
-        include: {
-          user: true,
-        },
+        include: { user: true },
       });
+
+      return projectMember;
     }),
 });

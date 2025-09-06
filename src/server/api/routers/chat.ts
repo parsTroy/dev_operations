@@ -1,111 +1,72 @@
 import { z } from "zod";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { pusher } from "~/lib/pusher";
 
 export const chatRouter = createTRPCRouter({
   getMessages: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Verify user has access to this project
-      const project = await ctx.db.project.findFirst({
-        where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-            },
-          },
-        },
+      const messages = await ctx.db.chatMessage.findMany({
+        where: { projectId: input.projectId },
+        include: { user: true, mentions: { include: { user: true } } },
+        orderBy: { createdAt: "asc" },
       });
-
-      if (!project) {
-        throw new Error("Project not found or access denied");
-      }
-
-      return ctx.db.chatMessage.findMany({
-        where: {
-          projectId: input.projectId,
-        },
-        include: {
-          user: true,
-          mentions: {
-            include: {
-              user: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-        take: 50, // Limit to last 50 messages
-      });
+      return messages;
     }),
 
   sendMessage: protectedProcedure
     .input(
       z.object({
-        content: z.string().min(1, "Message content is required"),
+        content: z.string().min(1),
         projectId: z.string(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify user has access to this project
-      const project = await ctx.db.project.findFirst({
-        where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-            },
-          },
-        },
-      });
+      // Parse mentions from content
+      const mentionMatches = input.content.match(/@(\w+)/g);
+      const mentions = mentionMatches ?? [];
 
-      if (!project) {
-        throw new Error("Project not found or access denied");
-      }
-
-      // Extract mentions from content (e.g., @username)
-      const mentionRegex = /@(\w+)/g;
-      const mentions = [];
-      let match;
-      while ((match = mentionRegex.exec(input.content)) !== null) {
-        mentions.push(match[1]);
-      }
-
-      // Find mentioned users
+      // Get mentioned users
       const mentionedUsers = await ctx.db.user.findMany({
         where: {
           name: {
-            in: mentions,
+            in: mentions.map((m) => m.slice(1)), // Remove @ symbol
           },
         },
       });
 
-      // Create the message
+      // Create message without mentions first
       const message = await ctx.db.chatMessage.create({
         data: {
           content: input.content,
           projectId: input.projectId,
           userId: ctx.session.user.id,
-          mentions: {
-            create: mentionedUsers.map((user) => ({
-              userId: user.id,
-            })),
-          },
         },
-        include: {
-          user: true,
-          mentions: {
-            include: {
-              user: true,
-            },
-          },
-        },
+        include: { user: true, mentions: { include: { user: true } } },
       });
+
+      // Create mention records if there are mentioned users
+      if (mentionedUsers.length > 0) {
+        await ctx.db.mention.createMany({
+          data: mentionedUsers.map((user) => ({
+            messageId: message.id,
+            userId: user.id,
+          })),
+        });
+
+        // Fetch the message again with mentions
+        const messageWithMentions = await ctx.db.chatMessage.findUnique({
+          where: { id: message.id },
+          include: { user: true, mentions: { include: { user: true } } },
+        });
+
+        // Trigger real-time update with mentions
+        await pusher.trigger(`project-${input.projectId}`, "new-message", {
+          message: messageWithMentions,
+        });
+
+        return messageWithMentions;
+      }
 
       // Trigger real-time update
       await pusher.trigger(`project-${input.projectId}`, "new-message", {
@@ -118,29 +79,10 @@ export const chatRouter = createTRPCRouter({
   getProjectMembers: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ ctx, input }) => {
-      // Verify user has access to this project
-      const project = await ctx.db.project.findFirst({
-        where: {
-          id: input.projectId,
-          members: {
-            some: {
-              userId: ctx.session.user.id,
-            },
-          },
-        },
+      const members = await ctx.db.projectMember.findMany({
+        where: { projectId: input.projectId },
+        include: { user: true },
       });
-
-      if (!project) {
-        throw new Error("Project not found or access denied");
-      }
-
-      return ctx.db.projectMember.findMany({
-        where: {
-          projectId: input.projectId,
-        },
-        include: {
-          user: true,
-        },
-      });
+      return members;
     }),
 });

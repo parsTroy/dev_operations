@@ -1,35 +1,35 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { loadStripe, type Stripe, type StripeElements } from '@stripe/stripe-js';
-
-let stripePromise: Promise<Stripe | null>;
+import { useEffect, useState } from "react";
+import { loadStripe, type StripeElements } from "@stripe/stripe-js";
 
 export function useStripeElements() {
-  const [stripe, setStripe] = useState<Stripe | null>(null);
+  const [stripe, setStripe] = useState<any>(null);
   const [elements, setElements] = useState<StripeElements | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!stripePromise) {
-      // Use the publishable key directly from environment
-      const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-      if (!publishableKey) {
-        console.error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not defined');
-        setIsLoading(false);
-        return;
+    const initializeStripe = async () => {
+      try {
+        const stripeInstance = await loadStripe(
+          process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+        );
+        
+        if (stripeInstance) {
+          setStripe(stripeInstance);
+          // Initialize elements after stripe is loaded
+          const elementsInstance = stripeInstance.elements();
+          setElements(elementsInstance);
+        }
+      } catch (error) {
+        console.error("Error loading Stripe:", error);
+      } finally {
+        setLoading(false);
       }
-      stripePromise = loadStripe(publishableKey);
-    }
+    };
 
-    stripePromise.then((stripeInstance) => {
-      setStripe(stripeInstance);
-      if (stripeInstance) {
-        setElements(stripeInstance.elements());
-      }
-      setIsLoading(false);
-    });
+    void initializeStripe();
   }, []);
 
-  return { stripe, elements, isLoading };
+  return { stripe, elements, loading };
 }
