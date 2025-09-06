@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { priceId, paymentMethodId } = await req.json();
+    const body = await req.json() as { priceId: string; paymentMethodId: string };
 
-    if (!priceId || !paymentMethodId) {
+    if (!body.priceId || !body.paymentMethodId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -43,27 +43,27 @@ export async function POST(req: NextRequest) {
     // Create subscription
     const subscription = await stripe.subscriptions.create({
       customer: customer.stripeCustomerId,
-      items: [{ price: priceId }],
+      items: [{ price: body.priceId }],
       payment_behavior: 'default_incomplete',
       payment_settings: { save_default_payment_method: 'on_subscription' },
       expand: ['latest_invoice.payment_intent'],
     });
 
     // Update payment method
-    await stripe.paymentMethods.attach(paymentMethodId, {
+    await stripe.paymentMethods.attach(body.paymentMethodId, {
       customer: customer.stripeCustomerId,
     });
 
     await stripe.customers.update(customer.stripeCustomerId, {
       invoice_settings: {
-        default_payment_method: paymentMethodId,
+        default_payment_method: body.paymentMethodId,
       },
     });
 
     return NextResponse.json({
       subscription: {
         id: subscription.id,
-        client_secret: (subscription.latest_invoice as any)?.payment_intent?.client_secret,
+        client_secret: (subscription.latest_invoice as unknown as { payment_intent: { client_secret: string } })?.payment_intent?.client_secret,
       },
     });
   } catch (error) {

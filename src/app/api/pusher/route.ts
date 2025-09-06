@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { pusher } from "~/lib/pusher";
 import { auth } from "~/server/auth";
 
@@ -9,9 +10,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { channel, event, data } = await req.json();
+    const body = await req.json() as { channel: string; event: string; data: unknown };
 
-    await pusher.trigger(channel, event, data);
+    await pusher.trigger(body.channel, body.event, body.data);
 
     return NextResponse.json({ success: true });
   } catch (error) {
