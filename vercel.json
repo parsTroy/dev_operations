@@ -7,9 +7,5 @@
     "src/app/api/**/*.ts": {
       "runtime": "nodejs18.x"
     }
-  },
-  "env": {
-    "NEXTAUTH_URL": "https://dev-operations.vercel.app",
-    "NEXTAUTH_SECRET": "@nextauth-secret"
   }
 }
