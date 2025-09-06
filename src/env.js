@@ -37,7 +37,11 @@ export const env = createEnv({
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
     STRIPE_PRICE_ID_PRO_ANNUAL: z.string().min(1),
     STRIPE_PRICE_ID_LIFETIME: z.string().min(1),
-    RESEND_API_KEY: z.string().min(1),
+    SMTP_HOST: z.string().min(1),
+    SMTP_PORT: z.string().min(1),
+    SMTP_SECURE: z.string().min(1),
+    SMTP_USER: z.string().email(),
+    SMTP_PASS: z.string().min(1),
   },
 
   /**
@@ -75,7 +79,11 @@ export const env = createEnv({
     STRIPE_PRICE_ID_PRO_MONTHLY: process.env.STRIPE_PRICE_ID_PRO_MONTHLY,
     STRIPE_PRICE_ID_PRO_ANNUAL: process.env.STRIPE_PRICE_ID_PRO_ANNUAL,
     STRIPE_PRICE_ID_LIFETIME: process.env.STRIPE_PRICE_ID_LIFETIME,
-    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    SMTP_HOST: process.env.SMTP_HOST,
+    SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_SECURE: process.env.SMTP_SECURE,
+    SMTP_USER: process.env.SMTP_USER,
+    SMTP_PASS: process.env.SMTP_PASS,
   },
   /**
    * Run `build` or `dev` with SKIP_ENV_VALIDATION to skip env validation. This is especially

@@ -28,19 +28,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create transporter (using Gmail SMTP as example)
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
+    // Create transporter using Namecheap Private Email SMTP
+    const transporter = nodemailer.createTransport({
+      host: 'mail.privateemail.com', // Namecheap's SMTP server
+      port: 587, // Standard port for TLS
+      secure: false, // false for 587, true for 465
       auth: {
-        user: process.env.SMTP_USER, // Your Gmail address
-        pass: process.env.SMTP_PASS, // Your Gmail app password
+        user: process.env.SMTP_USER, // support@devoperations.ca
+        pass: process.env.SMTP_PASS, // Your email password
       },
+      tls: {
+        rejectUnauthorized: false // Sometimes needed for private email
+      }
     });
 
     // Email content
     const mailOptions = {
-      from: process.env.SMTP_USER,
-      to: 'support@devoperations.ca',
+      from: process.env.SMTP_USER, // support@devoperations.ca
+      to: 'support@devoperations.ca', // Where to send the contact form
       subject: `Contact Form: ${body.subject}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
