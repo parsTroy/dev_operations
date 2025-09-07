@@ -356,7 +356,7 @@ function DashboardContent() {
               <p className="text-gray-600">Manage and collaborate on your development projects</p>
               {user && (
                 <div className="mt-2 text-sm text-gray-500">
-                  {user._count?.projects || 0} of {user.projectLimit} projects used
+                  {user._count?.projects || 0} of {(user.subscriptionTier === 'pro' || user.subscriptionTier === 'lifetime') ? '∞' : user.projectLimit} projects used
                   {user.subscriptionTier === 'free' && (
                     <span className="ml-2">
                       <Link href="/pricing" className="text-blue-600 hover:text-blue-800">

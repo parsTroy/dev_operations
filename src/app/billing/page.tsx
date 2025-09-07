@@ -36,6 +36,9 @@ function BillingContent() {
   const currentSubscription = user.subscriptions?.[0];
   const projectCount = user._count?.projects || 0;
   const projectLimit = user.projectLimit;
+  
+  // Display ∞ for premium members
+  const displayProjectLimit = (user.subscriptionTier === 'pro' || user.subscriptionTier === 'lifetime') ? '∞' : projectLimit;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -105,7 +108,7 @@ function BillingContent() {
                     <div>
                       <p className="text-sm font-medium text-gray-600">Projects Used</p>
                       <p className="text-2xl font-bold text-gray-900">
-                        {projectCount} / {projectLimit}
+                        {projectCount} / {displayProjectLimit}
                       </p>
                     </div>
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -115,8 +118,16 @@ function BillingContent() {
                   <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${Math.min((projectCount / projectLimit) * 100, 100)}%` }}
+                        className={`h-2 rounded-full ${
+                          user.subscriptionTier === 'pro' || user.subscriptionTier === 'lifetime' 
+                            ? 'bg-gradient-to-r from-blue-600 to-green-500' 
+                            : 'bg-blue-600'
+                        }`}
+                        style={{ 
+                          width: user.subscriptionTier === 'pro' || user.subscriptionTier === 'lifetime' 
+                            ? '100%' 
+                            : `${Math.min((projectCount / projectLimit) * 100, 100)}%` 
+                        }}
                       ></div>
                     </div>
                   </div>

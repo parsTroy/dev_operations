@@ -194,7 +194,7 @@ function SettingsContent() {
                         <div>
                           <span className="text-gray-600">Projects:</span>
                           <span className="ml-2 font-medium">
-                            {user?._count?.projects || 0} of {user?.projectLimit || 5}
+                            {user?._count?.projects || 0} of {(user?.subscriptionTier === 'pro' || user?.subscriptionTier === 'lifetime') ? '∞' : (user?.projectLimit || 5)}
                           </span>
                         </div>
                         <div>

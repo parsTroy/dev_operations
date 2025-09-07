@@ -68,7 +68,7 @@ export function NewProjectForm({ onClose }: NewProjectFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {user && user._count?.projects >= user.projectLimit && (
+          {user && user.subscriptionTier === 'free' && user._count?.projects >= user.projectLimit && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
                 You've reached your project limit of {user.projectLimit}. 
