@@ -120,8 +120,57 @@ export const projectsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.project.delete({
-        where: { id: input.id },
+      // Check if user is admin of the project
+      const membership = await ctx.db.projectMember.findFirst({
+        where: {
+          projectId: input.id,
+          userId: ctx.session.user.id,
+          role: "ADMIN",
+        },
+      });
+
+      if (!membership) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only project admins can delete projects",
+        });
+      }
+
+      // Use a transaction to delete all related records first
+      return await ctx.db.$transaction(async (tx) => {
+        // Delete all tasks and their comments
+        await tx.comment.deleteMany({
+          where: {
+            task: {
+              projectId: input.id,
+            },
+          },
+        });
+
+        await tx.task.deleteMany({
+          where: {
+            projectId: input.id,
+          },
+        });
+
+        // Delete all docs
+        await tx.docPage.deleteMany({
+          where: {
+            projectId: input.id,
+          },
+        });
+
+        // Delete all project members
+        await tx.projectMember.deleteMany({
+          where: {
+            projectId: input.id,
+          },
+        });
+
+        // Finally delete the project
+        return await tx.project.delete({
+          where: { id: input.id },
+        });
       });
     }),
 
