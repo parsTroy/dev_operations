@@ -95,22 +95,32 @@ export function TeamMembers({ projectId, currentUserId }: TeamMembersProps) {
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div className="flex items-center gap-3">
-              {member.user.image ? (
-                <img
-                  src={member.user.image}
-                  alt={member.user.name || "User"}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                  {member.user.name?.charAt(0) || member.user.email?.charAt(0) || "?"}
+              <div className="relative">
+                {member.user.image ? (
+                  <img
+                    src={member.user.image}
+                    alt={member.user.name || "User"}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                    {member.user.name?.charAt(0) || member.user.email?.charAt(0) || "?"}
+                  </div>
+                )}
+                {/* Online status indicator */}
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-              )}
+              </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium text-gray-900">
                     {member.user.name || "Unknown User"}
                   </h4>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-600 font-medium">Online</span>
+                  </div>
                   {member.userId === currentUserId && (
                     <span className="text-xs text-gray-500">(You)</span>
                   )}

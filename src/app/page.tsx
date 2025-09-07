@@ -78,11 +78,6 @@ function DashboardStats() {
     task.status !== 'DONE'
   );
 
-  // Get recent activity (tasks updated in last 3 days)
-  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-  const recentTasks = allTasks.filter(task => 
-    new Date(task.updatedAt) >= threeDaysAgo
-  ).slice(0, 4); // Limit to 4 tasks for grid layout
 
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -265,58 +260,6 @@ function DashboardStats() {
         )}
       </div>
 
-      {/* Recent Activity - Grid Layout */}
-      {recentTasks.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Activity</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {recentTasks.map((task) => (
-              <Link
-                key={task.id}
-                href={`/projects/${task.projectId}?highlight=${task.id}`}
-                className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
-              >
-                <div className="mb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} flex-shrink-0`}></div>
-                    <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
-                      {task.title}
-                    </h4>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {task.assignee ? (
-                      task.assignee.image ? (
-                        <img
-                          src={task.assignee.image}
-                          alt={task.assignee.name || "User"}
-                          className="w-4 h-4 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                          {task.assignee.name?.charAt(0) || "?"}
-                        </div>
-                      )
-                    ) : null}
-                    <p className="text-xs text-gray-500">
-                      {task.assignee?.name || 'Unassigned'} • {task.priority} priority
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
-                    <span className="text-xs text-gray-500">
-                      {new Date(task.updatedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

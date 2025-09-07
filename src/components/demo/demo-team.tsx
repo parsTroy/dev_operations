@@ -56,14 +56,24 @@ export function DemoTeam({ members }: DemoTeamProps) {
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                {member.user.name.charAt(0)}
+              <div className="relative">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                  {member.user.name.charAt(0)}
+                </div>
+                {/* Online status indicator */}
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium text-gray-900">
                     {member.user.name}
                   </h4>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-xs text-green-600 font-medium">Online</span>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-500">{member.user.email}</p>
               </div>
