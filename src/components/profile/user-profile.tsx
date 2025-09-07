@@ -41,13 +41,13 @@ export function UserProfile() {
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
-          <div className="p-2">
-            <div className="px-3 py-2 text-sm text-gray-700 border-b">
-              <p className="font-medium">{session.user.name || "User"}</p>
-              <p className="text-gray-500">{session.user.email}</p>
+        <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-lg shadow-lg border z-50">
+          <div className="p-4">
+            <div className="px-2 py-3 text-sm text-gray-700 border-b">
+              <p className="font-medium text-base">{session.user.name || "User"}</p>
+              <p className="text-gray-500 text-sm break-all">{session.user.email}</p>
               {user?.createdAt && (
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-2 whitespace-nowrap">
                   Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
                     year: 'numeric', 
                     month: 'long' 
@@ -61,15 +61,15 @@ export function UserProfile() {
               )}
             </div>
             
-            <div className="py-1">
+            <div className="py-2">
               <Link href="/billing">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-sm"
+                  className="w-full justify-start text-sm px-3 py-2"
                   onClick={() => setIsOpen(false)}
                 >
-                  <CreditCard className="h-4 w-4 mr-2" />
+                  <CreditCard className="h-4 w-4 mr-3" />
                   Billing
                 </Button>
               </Link>
@@ -78,10 +78,10 @@ export function UserProfile() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-sm"
+                  className="w-full justify-start text-sm px-3 py-2"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-4 w-4 mr-3" />
                   Settings
                 </Button>
               </Link>
@@ -89,13 +89,13 @@ export function UserProfile() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-sm text-red-600 hover:text-red-700"
+                className="w-full justify-start text-sm text-red-600 hover:text-red-700 px-3 py-2"
                 onClick={() => {
                   setIsOpen(false);
                   // Handle sign out
                 }}
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4 mr-3" />
                 Sign Out
               </Button>
             </div>
