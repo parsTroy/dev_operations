@@ -1,43 +1,33 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-
-// In-memory store for notifications (in production, use Redis or database)
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  data: Record<string, unknown>;
-  isRead: boolean;
-  createdAt: number;
-}
-
-const notifications = new Map<string, Notification[]>();
+import { pusher } from "~/lib/pusher";
 
 export const notificationsRouter = createTRPCRouter({
   getByUser: protectedProcedure.query(async ({ ctx }) => {
-    const userNotifications = notifications.get(ctx.session.user.id) ?? [];
-    return userNotifications.sort((a, b) => b.createdAt - a.createdAt);
+    return await ctx.db.notification.findMany({
+      where: { userId: ctx.session.user.id },
+      orderBy: { createdAt: "desc" },
+    });
   }),
 
   markAsRead: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const userNotifications = notifications.get(ctx.session.user.id) ?? [];
-      const notification = userNotifications.find((n) => n.id === input.id);
-      if (notification) {
-        notification.isRead = true;
-        notifications.set(ctx.session.user.id, userNotifications);
-      }
+      await ctx.db.notification.update({
+        where: { id: input.id },
+        data: { isRead: true },
+      });
       return { success: true };
     }),
 
   markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
-    const userNotifications = notifications.get(ctx.session.user.id) ?? [];
-    userNotifications.forEach((notification) => {
-      notification.isRead = true;
+    await ctx.db.notification.updateMany({
+      where: { 
+        userId: ctx.session.user.id,
+        isRead: false 
+      },
+      data: { isRead: true },
     });
-    notifications.set(ctx.session.user.id, userNotifications);
     return { success: true };
   }),
 
@@ -51,19 +41,27 @@ export const notificationsRouter = createTRPCRouter({
         data: z.record(z.any()).optional(),
       })
     )
-    .mutation(async ({ input }) => {
-      const userNotifications = notifications.get(input.userId) ?? [];
-      const notification: Notification = {
-        id: Math.random().toString(36).substr(2, 9),
-        type: input.type,
-        title: input.title,
-        message: input.message,
-        data: input.data ?? {},
-        isRead: false,
-        createdAt: Date.now(),
-      };
-      userNotifications.push(notification);
-      notifications.set(input.userId, userNotifications);
+    .mutation(async ({ ctx, input }) => {
+      const notification = await ctx.db.notification.create({
+        data: {
+          userId: input.userId,
+          type: input.type,
+          title: input.title,
+          message: input.message,
+          data: input.data ?? {},
+          isRead: false,
+        },
+      });
+
+      // Send real-time notification via Pusher
+      try {
+        await pusher.trigger(`user-${input.userId}`, "new-notification", {
+          notification,
+        });
+      } catch (error) {
+        console.error("Failed to send Pusher notification:", error);
+      }
+
       return notification;
     }),
 });

@@ -1,19 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
 import { Bell, Check, CheckCheck } from "lucide-react";
+import { usePusher } from "~/hooks/use-pusher";
 
 export function NotificationsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
+  const pusher = usePusher();
   
   const { data: notifications, isLoading } = api.notifications.getByUser.useQuery();
   const utils = api.useUtils();
   const markAsRead = api.notifications.markAsRead.useMutation();
   const markAllAsRead = api.notifications.markAllAsRead.useMutation();
 
-  const unreadCount = notifications?.filter(n => !n.isRead).length || 0;
+  // Subscribe to real-time notifications
+  useEffect(() => {
+    if (!pusher || !session?.user?.id) return;
+
+    const channel = pusher.subscribe(`user-${session.user.id}`);
+    
+    channel.bind("new-notification", () => {
+      // Refresh notifications when a new one arrives
+      utils.notifications.getByUser.invalidate();
+    });
+
+    return () => {
+      pusher.unsubscribe(`user-${session.user.id}`);
+    };
+  }, [pusher, session?.user?.id, utils.notifications.getByUser]);
+
+  const unreadCount = notifications?.filter((n: any) => !n.isRead).length || 0;
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead.mutateAsync({ id });
@@ -74,7 +94,7 @@ export function NotificationsDropdown() {
               <div className="p-4 text-center text-gray-500">No notifications</div>
             ) : (
               <div className="divide-y">
-                {notifications?.map((notification) => (
+                {notifications?.map((notification: any) => (
                   <div
                     key={notification.id}
                     className={`p-4 hover:bg-gray-50 ${
