@@ -63,6 +63,7 @@ export const chatRouter = createTRPCRouter({
         // Trigger real-time update with mentions
         await pusher.trigger(`project-${input.projectId}`, "new-message", {
           message: messageWithMentions,
+          userId: ctx.session.user.id,
         });
 
         return messageWithMentions;
@@ -71,6 +72,7 @@ export const chatRouter = createTRPCRouter({
       // Trigger real-time update
       await pusher.trigger(`project-${input.projectId}`, "new-message", {
         message,
+        userId: ctx.session.user.id,
       });
 
       return message;

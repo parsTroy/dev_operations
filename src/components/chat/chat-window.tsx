@@ -15,6 +15,8 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
   const { data: session } = useSession();
   const [message, setMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pusher = usePusher();
 
@@ -29,20 +31,38 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
     },
   });
 
+  // Track last message ID when messages load
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      if (latestMessage.id !== lastMessageId) {
+        setLastMessageId(latestMessage.id);
+        // If chat is closed and this is a new message from someone else, increment unread count
+        if (!isOpen && latestMessage.userId !== session?.user?.id) {
+          setUnreadCount(prev => prev + 1);
+        }
+      }
+    }
+  }, [messages, lastMessageId, isOpen, session?.user?.id]);
+
   // Subscribe to real-time updates
   useEffect(() => {
     if (!pusher) return;
 
     const channel = pusher.subscribe(`project-${projectId}`);
     
-    channel.bind("new-message", () => {
+    channel.bind("new-message", (data: { userId: string }) => {
       utils.chat.getMessages.invalidate({ projectId });
+      // If chat is closed and message is from someone else, increment unread count
+      if (!isOpen && data.userId !== session?.user?.id) {
+        setUnreadCount(prev => prev + 1);
+      }
     });
 
     return () => {
       pusher.unsubscribe(`project-${projectId}`);
     };
-  }, [pusher, projectId, utils.chat]);
+  }, [pusher, projectId, utils.chat, isOpen, session?.user?.id]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -59,6 +79,11 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
     });
   };
 
+  const handleOpenChat = () => {
+    setIsOpen(true);
+    setUnreadCount(0); // Clear unread count when chat is opened
+  };
+
   const formatMessage = (content: string) => {
     // Simple mention highlighting
     return content.replace(/@(\w+)/g, '<span class="text-blue-600 font-medium">@$1</span>');
@@ -66,12 +91,19 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
 
   if (!isOpen) {
     return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
+      <div className="fixed bottom-6 right-6">
+        <Button
+          onClick={handleOpenChat}
+          className="rounded-full h-14 w-14 shadow-lg relative"
+        >
+          <MessageCircle className="h-6 w-6" />
+          {unreadCount > 0 && (
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </div>
+          )}
+        </Button>
+      </div>
     );
   }
 
