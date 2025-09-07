@@ -408,35 +408,13 @@ function SettingsContent() {
 
               {activeTab === "data" && (
                 <div className="p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Data & Storage</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Data Management</h2>
                   
                   <div className="space-y-6">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-3">Storage Usage</h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Projects</span>
-                          <span>2.3 MB</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Files</span>
-                          <span>15.7 MB</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Chat History</span>
-                          <span>1.2 MB</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: "25%" }}></div>
-                        </div>
-                        <p className="text-xs text-gray-500">19.2 MB of 100 MB used</p>
-                      </div>
-                    </div>
-
                     <div className="space-y-4">
                       <div>
                         <h3 className="font-medium text-gray-900 mb-2">Export Data</h3>
-                        <p className="text-sm text-gray-600 mb-3">Download a copy of all your data</p>
+                        <p className="text-sm text-gray-600 mb-3">Download a copy of all your data including projects, tasks, comments, and chat history</p>
                         <Button 
                           variant="outline" 
                           size="sm"
