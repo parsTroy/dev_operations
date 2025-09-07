@@ -5,10 +5,12 @@ import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { User, Settings, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
+import { api } from "~/trpc/react";
 
 export function UserProfile() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const { data: user } = api.subscriptions.getCurrentSubscription.useQuery();
 
   if (!session?.user) {
     return null;
@@ -44,6 +46,14 @@ export function UserProfile() {
             <div className="px-3 py-2 text-sm text-gray-700 border-b">
               <p className="font-medium">{session.user.name || "User"}</p>
               <p className="text-gray-500">{session.user.email}</p>
+              {user?.createdAt && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long' 
+                  })}
+                </p>
+              )}
             </div>
             
             <div className="py-1">
@@ -59,15 +69,17 @@ export function UserProfile() {
                 </Button>
               </Link>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-sm"
-                onClick={() => setIsOpen(false)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
+              <Link href="/settings">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </Link>
               
               <Button
                 variant="ghost"
