@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { use } from "react";
 import { MarkdownEditor } from "~/components/docs/markdown-editor";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface DocsPageProps {
   params: Promise<{
@@ -247,7 +249,7 @@ function DocsPageContent({ projectId }: { projectId: string }) {
       {/* Editor Modal */}
       {(editingDoc || isCreating) && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200 flex flex-col">
             <MarkdownEditor
               initialTitle={editingDoc?.title || ""}
               initialContent={editingDoc?.content || ""}
@@ -262,8 +264,8 @@ function DocsPageContent({ projectId }: { projectId: string }) {
       {/* Viewer Modal */}
       {viewingDoc && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
-          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] max-w-6xl animate-in zoom-in-95 duration-200 flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
               <h2 className="text-xl font-semibold text-gray-900">{viewingDoc.title}</h2>
               <div className="flex items-center gap-2">
                 <Button
@@ -285,9 +287,13 @@ function DocsPageContent({ projectId }: { projectId: string }) {
                 </Button>
               </div>
             </div>
-            <div className="p-6 h-[calc(100%-80px)] overflow-y-auto">
-              <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(viewingDoc.content) }} />
+            <div className="flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto p-6">
+                <div className="prose prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h1:mt-8 prose-h2:text-xl prose-h2:mb-3 prose-h2:mt-6 prose-h3:text-lg prose-h3:mb-2 prose-h3:mt-4 prose-p:mb-4 prose-strong:font-semibold prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-gray-100 prose-pre:p-4 prose-pre:rounded prose-pre:overflow-x-auto prose-ul:mb-4 prose-ol:mb-4 prose-li:mb-1 max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {viewingDoc.content}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           </div>
@@ -297,16 +303,5 @@ function DocsPageContent({ projectId }: { projectId: string }) {
   );
 }
 
-// Simple markdown renderer (you might want to use a proper markdown library)
-function renderMarkdown(content: string): string {
-  return content
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-sm">$1</code>')
-    .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-6 mb-3">$1</h2>')
-    .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-8 mb-4">$1</h1>');
-}
 
 
