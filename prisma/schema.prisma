@@ -251,8 +251,6 @@ model UserSettings {
   id                    String   @id @default(cuid())
   userId                String   @unique
   // Privacy & Security
-  twoFactorEnabled      Boolean  @default(false)
-  twoFactorSecret       String?  // Store 2FA secret
   profileVisibility     String   @default("team") // "team", "public", "private"
   showActivityStatus    Boolean  @default(true)
   // Notifications (for future use)

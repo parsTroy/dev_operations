@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { authenticator } from "otplib";
-import QRCode from "qrcode";
 
 export const settingsRouter = createTRPCRouter({
   // Get user settings
@@ -48,120 +46,6 @@ export const settingsRouter = createTRPCRouter({
       return settings;
     }),
 
-  // Generate 2FA setup
-  generate2FA: protectedProcedure.mutation(async ({ ctx }) => {
-    const user = await ctx.db.user.findUnique({
-      where: { id: ctx.session.user.id },
-    });
-
-    if (!user) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
-    }
-
-    const secret = authenticator.generateSecret();
-    const serviceName = "dev_operations";
-    const accountName = user.email || user.name || "User";
-    
-    const otpauth = authenticator.keyuri(accountName, serviceName, secret);
-    
-    // Generate QR code
-    const qrCodeUrl = await QRCode.toDataURL(otpauth);
-
-    // Store the secret temporarily (will be saved when user verifies)
-    await ctx.db.userSettings.upsert({
-      where: { userId: ctx.session.user.id },
-      create: {
-        userId: ctx.session.user.id,
-        twoFactorSecret: secret,
-      },
-      update: {
-        twoFactorSecret: secret,
-      },
-    });
-
-    return {
-      secret,
-      qrCodeUrl,
-      otpauth,
-    };
-  }),
-
-  // Verify and enable 2FA
-  verify2FA: protectedProcedure
-    .input(z.object({ token: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const settings = await ctx.db.userSettings.findUnique({
-        where: { userId: ctx.session.user.id },
-      });
-
-      if (!settings?.twoFactorSecret) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No 2FA setup in progress",
-        });
-      }
-
-      const isValid = authenticator.verify({
-        token: input.token,
-        secret: settings.twoFactorSecret,
-      });
-
-      if (!isValid) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid 2FA token",
-        });
-      }
-
-      // Enable 2FA
-      const updatedSettings = await ctx.db.userSettings.update({
-        where: { userId: ctx.session.user.id },
-        data: {
-          twoFactorEnabled: true,
-        },
-      });
-
-      return updatedSettings;
-    }),
-
-  // Disable 2FA
-  disable2FA: protectedProcedure
-    .input(z.object({ token: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      const settings = await ctx.db.userSettings.findUnique({
-        where: { userId: ctx.session.user.id },
-      });
-
-      if (!settings?.twoFactorEnabled || !settings.twoFactorSecret) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "2FA is not enabled",
-        });
-      }
-
-      const isValid = authenticator.verify({
-        token: input.token,
-        secret: settings.twoFactorSecret,
-      });
-
-      if (!isValid) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Invalid 2FA token",
-        });
-      }
-
-      // Disable 2FA
-      const updatedSettings = await ctx.db.userSettings.update({
-        where: { userId: ctx.session.user.id },
-        data: {
-          twoFactorEnabled: false,
-          twoFactorSecret: null,
-        },
-      });
-
-      return updatedSettings;
-    }),
 
   // Export user data
   exportData: protectedProcedure.mutation(async ({ ctx }) => {

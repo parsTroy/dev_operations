@@ -16,9 +16,6 @@ function SettingsContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "data">("profile");
-  const [show2FASetup, setShow2FASetup] = useState(false);
-  const [twoFAToken, setTwoFAToken] = useState("");
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -32,26 +29,6 @@ function SettingsContent() {
     },
   });
 
-  const generate2FA = api.settings.generate2FA.useMutation({
-    onSuccess: (data) => {
-      setQrCodeUrl(data.qrCodeUrl);
-      setShow2FASetup(true);
-    },
-  });
-
-  const verify2FA = api.settings.verify2FA.useMutation({
-    onSuccess: () => {
-      setShow2FASetup(false);
-      setTwoFAToken("");
-      utils.settings.getSettings.invalidate();
-    },
-  });
-
-  const disable2FA = api.settings.disable2FA.useMutation({
-    onSuccess: () => {
-      utils.settings.getSettings.invalidate();
-    },
-  });
 
   const exportData = api.settings.exportData.useMutation({
     onSuccess: (data) => {
@@ -275,94 +252,6 @@ function SettingsContent() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Privacy & Security</h2>
                   
                   <div className="space-y-6">
-                    {/* Two-Factor Authentication */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h3 className="font-medium text-blue-900 mb-2">Two-Factor Authentication</h3>
-                      <p className="text-sm text-blue-700 mb-3">Add an extra layer of security to your account</p>
-                      {settings?.twoFactorEnabled ? (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-green-700">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-sm font-medium">2FA is enabled</span>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-red-600 border-red-300 hover:bg-red-50"
-                            onClick={() => {
-                              const token = prompt("Enter your 2FA code to disable:");
-                              if (token) {
-                                disable2FA.mutate({ token });
-                              }
-                            }}
-                            disabled={disable2FA.isPending}
-                          >
-                            {disable2FA.isPending ? "Disabling..." : "Disable 2FA"}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="text-blue-600 border-blue-300"
-                          onClick={() => generate2FA.mutate()}
-                          disabled={generate2FA.isPending}
-                        >
-                          {generate2FA.isPending ? "Generating..." : "Enable 2FA"}
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* 2FA Setup Modal */}
-                    {show2FASetup && (
-                      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-xl w-[90vw] max-w-md p-6">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Setup Two-Factor Authentication</h3>
-                          <div className="space-y-4">
-                            <div className="text-center">
-                              <p className="text-sm text-gray-600 mb-4">
-                                Scan this QR code with your authenticator app:
-                              </p>
-                              {qrCodeUrl && (
-                                <img src={qrCodeUrl} alt="2FA QR Code" className="mx-auto w-48 h-48" />
-                              )}
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Enter verification code
-                              </label>
-                              <input
-                                type="text"
-                                value={twoFAToken}
-                                onChange={(e) => setTwoFAToken(e.target.value)}
-                                placeholder="123456"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                maxLength={6}
-                              />
-                            </div>
-                            <div className="flex gap-3">
-                              <Button
-                                variant="outline"
-                                onClick={() => {
-                                  setShow2FASetup(false);
-                                  setTwoFAToken("");
-                                }}
-                                className="flex-1"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={() => verify2FA.mutate({ token: twoFAToken })}
-                                disabled={twoFAToken.length !== 6 || verify2FA.isPending}
-                                className="flex-1"
-                              >
-                                {verify2FA.isPending ? "Verifying..." : "Verify & Enable"}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Profile Visibility */}
                     <div className="flex items-center justify-between">
