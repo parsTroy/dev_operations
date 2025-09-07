@@ -12,6 +12,7 @@ import { use } from "react";
 import { MarkdownEditor } from "~/components/docs/markdown-editor";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface DocsPageProps {
   params: Promise<{
@@ -289,8 +290,42 @@ function DocsPageContent({ projectId }: { projectId: string }) {
             </div>
             <div className="flex-1 overflow-hidden">
               <div className="h-full overflow-y-auto p-6">
-                <div className="prose prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-4 prose-h1:mt-8 prose-h2:text-xl prose-h2:mb-3 prose-h2:mt-6 prose-h3:text-lg prose-h3:mb-2 prose-h3:mt-4 prose-p:mb-4 prose-strong:font-semibold prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-pre:bg-gray-100 prose-pre:p-4 prose-pre:rounded prose-pre:overflow-x-auto prose-ul:mb-4 prose-ol:mb-4 prose-li:mb-1 max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <div className="prose prose-gray max-w-none prose-headings:font-semibold prose-h1:text-2xl prose-h1:mb-6 prose-h1:mt-8 prose-h1:border-b prose-h1:border-gray-200 prose-h1:pb-2 prose-h2:text-xl prose-h2:mb-4 prose-h2:mt-8 prose-h2:border-b prose-h2:border-gray-100 prose-h2:pb-1 prose-h3:text-lg prose-h3:mb-3 prose-h3:mt-6 prose-h4:text-base prose-h4:mb-2 prose-h4:mt-4 prose-p:mb-4 prose-p:leading-relaxed prose-strong:font-semibold prose-strong:text-gray-900 prose-em:italic prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:text-gray-800 prose-pre:bg-gray-900 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:overflow-x-auto prose-pre:border prose-pre:border-gray-700 prose-ul:mb-4 prose-ul:pl-6 prose-ol:mb-4 prose-ol:pl-6 prose-li:mb-2 prose-li:leading-relaxed prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:bg-blue-50 prose-blockquote:py-2 prose-blockquote:mb-4 prose-hr:border-gray-300 prose-hr:my-8 prose-table:border-collapse prose-table:border prose-table:border-gray-300 prose-th:border prose-th:border-gray-300 prose-th:bg-gray-100 prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-300 prose-td:px-3 prose-td:py-2">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm, remarkBreaks]}
+                    components={{
+                      p: ({ children }) => <p className="mb-4 leading-relaxed text-gray-700">{children}</p>,
+                      h1: ({ children }) => <h1 className="text-3xl font-bold mb-6 mt-8 text-gray-900 border-b-2 border-gray-300 pb-3">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-2xl font-semibold mb-5 mt-8 text-gray-900 border-b border-gray-200 pb-2">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-xl font-semibold mb-4 mt-6 text-gray-900">{children}</h3>,
+                      h4: ({ children }) => <h4 className="text-lg font-semibold mb-3 mt-5 text-gray-900">{children}</h4>,
+                      h5: ({ children }) => <h5 className="text-base font-semibold mb-2 mt-4 text-gray-900">{children}</h5>,
+                      h6: ({ children }) => <h6 className="text-sm font-semibold mb-2 mt-3 text-gray-900">{children}</h6>,
+                      ul: ({ children }) => <ul className="mb-6 pl-6 space-y-2 list-disc">{children}</ul>,
+                      ol: ({ children }) => <ol className="mb-6 pl-6 space-y-2 list-decimal">{children}</ol>,
+                      li: ({ children }) => <li className="mb-2 leading-relaxed text-gray-700">{children}</li>,
+                      blockquote: ({ children }) => <blockquote className="border-l-4 border-blue-500 pl-6 italic bg-blue-50 py-4 mb-6 rounded-r text-gray-700">{children}</blockquote>,
+                      code: ({ children, className }) => {
+                        const isInline = !className?.includes('language-');
+                        if (isInline) {
+                          return <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800 border">{children}</code>;
+                        }
+                        return <code className={className}>{children}</code>;
+                      },
+                      pre: ({ children }) => <pre className="bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto border border-gray-700 mb-6 text-sm font-mono">{children}</pre>,
+                      hr: () => <hr className="border-gray-300 my-8 border-t-2" />,
+                      table: ({ children }) => <div className="overflow-x-auto mb-6 border border-gray-300 rounded-lg"><table className="border-collapse w-full">{children}</table></div>,
+                      thead: ({ children }) => <thead className="bg-gray-100">{children}</thead>,
+                      tbody: ({ children }) => <tbody className="divide-y divide-gray-200">{children}</tbody>,
+                      tr: ({ children }) => <tr className="hover:bg-gray-50">{children}</tr>,
+                      th: ({ children }) => <th className="border-b border-gray-300 px-4 py-3 text-left font-semibold text-gray-900 bg-gray-100">{children}</th>,
+                      td: ({ children }) => <td className="border-b border-gray-200 px-4 py-3 text-gray-700">{children}</td>,
+                      strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                      em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                      a: ({ children, href }) => <a href={href} className="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                      img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-lg shadow-sm mb-4" />,
+                    }}
+                  >
                     {viewingDoc.content}
                   </ReactMarkdown>
                 </div>
