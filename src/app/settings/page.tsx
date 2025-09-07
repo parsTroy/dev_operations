@@ -7,7 +7,7 @@ import { SignOutButton } from "~/components/auth/sign-out-button";
 import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
-import { ArrowLeft, User, Shield, Database, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Shield, Database, Trash2, HelpCircle, Mail, Github, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { useState } from "react";
 function SettingsContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "data">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "data" | "support">("profile");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
@@ -56,6 +56,7 @@ function SettingsContent() {
     { id: "profile", label: "Profile", icon: User },
     { id: "privacy", label: "Privacy & Security", icon: Shield },
     { id: "data", label: "Data & Storage", icon: Database },
+    { id: "support", label: "Support", icon: HelpCircle },
   ];
 
   const formatDate = (date: Date) => {
@@ -327,6 +328,115 @@ function SettingsContent() {
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete Account
                         </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "support" && (
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Support & Resources</h2>
+                  
+                  <div className="space-y-6">
+                    {/* Quick Help Links */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-gray-900 mb-3">Get Help</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Link href="/help">
+                          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <HelpCircle className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <h4 className="font-medium text-gray-900">Help Center</h4>
+                                <p className="text-sm text-gray-600">Find answers to common questions</p>
+                              </div>
+                              <ExternalLink className="h-4 w-4 text-gray-400 ml-auto" />
+                            </div>
+                          </div>
+                        </Link>
+
+                        <Link href="/documentation">
+                          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <Database className="h-5 w-5 text-green-600" />
+                              <div>
+                                <h4 className="font-medium text-gray-900">Documentation</h4>
+                                <p className="text-sm text-gray-600">Detailed guides and API docs</p>
+                              </div>
+                              <ExternalLink className="h-4 w-4 text-gray-400 ml-auto" />
+                            </div>
+                          </div>
+                        </Link>
+
+                        <Link href="/contact">
+                          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <Mail className="h-5 w-5 text-purple-600" />
+                              <div>
+                                <h4 className="font-medium text-gray-900">Contact Support</h4>
+                                <p className="text-sm text-gray-600">Get in touch with our team</p>
+                              </div>
+                              <ExternalLink className="h-4 w-4 text-gray-400 ml-auto" />
+                            </div>
+                          </div>
+                        </Link>
+
+                        <a href="https://github.com/parsTroy/dev_operations" target="_blank" rel="noopener noreferrer">
+                          <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-3">
+                              <Github className="h-5 w-5 text-gray-600" />
+                              <div>
+                                <h4 className="font-medium text-gray-900">GitHub Repository</h4>
+                                <p className="text-sm text-gray-600">View source code and issues</p>
+                              </div>
+                              <ExternalLink className="h-4 w-4 text-gray-400 ml-auto" />
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="bg-blue-50 rounded-lg p-6">
+                      <h3 className="font-medium text-gray-900 mb-3">Direct Contact</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm text-gray-700">support@devoperations.ca</span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">We typically respond within 24 hours</p>
+                      </div>
+                    </div>
+
+                    {/* Additional Resources */}
+                    <div className="space-y-4">
+                      <h3 className="font-medium text-gray-900 mb-3">Additional Resources</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                          <div>
+                            <p className="text-sm text-gray-700">
+                              <strong>Before contacting support:</strong> Check our Help Center for quick answers to common questions
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                          <div>
+                            <p className="text-sm text-gray-700">
+                              <strong>Bug reports:</strong> Use our GitHub repository to report bugs and feature requests
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                          <div>
+                            <p className="text-sm text-gray-700">
+                              <strong>Feature requests:</strong> We love hearing your ideas! Contact us or create a GitHub issue
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
