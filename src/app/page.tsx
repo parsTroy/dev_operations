@@ -162,103 +162,100 @@ function DashboardStats() {
         </div>
       </div>
 
-      {/* Alerts and Upcoming Tasks */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Overdue Tasks Alert */}
-        {overdueTasks.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-red-900">Overdue Tasks</h3>
-            </div>
-            <div className="space-y-2">
-              {overdueTasks.slice(0, 3).map((task) => (
-                <div key={task.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-red-900">{task.title}</p>
-                    <p className="text-xs text-red-600">
-                      Due {new Date(task.dueDate!).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Link href={`/projects/${task.projectId}`}>
-                    <Button variant="outline" size="sm" className="text-red-600 border-red-300">
-                      View
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-              {overdueTasks.length > 3 && (
-                <p className="text-xs text-red-600">
-                  +{overdueTasks.length - 3} more overdue tasks
-                </p>
-              )}
-            </div>
+      {/* Overdue Tasks Alert */}
+      {overdueTasks.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+            <h3 className="text-lg font-semibold text-red-900">Overdue Tasks</h3>
           </div>
-        )}
-
-        {/* Upcoming Tasks */}
-        {upcomingTasks.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Calendar className="h-6 w-6 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Upcoming Tasks</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {upcomingTasks
-                .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-                .slice(0, 6)
-                .map((task) => (
-                  <Link
-                    key={task.id}
-                    href={`/projects/${task.projectId}?highlight=${task.id}`}
-                    className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
-                  >
-                    <div className="mb-3">
-                      <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors mb-2">
-                        {task.title}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        {task.assignee ? (
-                          task.assignee.image ? (
-                            <img
-                              src={task.assignee.image}
-                              alt={task.assignee.name || "User"}
-                              className="w-4 h-4 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                              {task.assignee.name?.charAt(0) || "?"}
-                            </div>
-                          )
-                        ) : null}
-                        <p className="text-xs text-gray-500">
-                          {task.assignee?.name || 'Unassigned'} • {task.priority} priority
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
-                        <span className="text-xs text-gray-500">
-                          Due {new Date(task.dueDate!).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <ArrowRight className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                    </div>
-                  </Link>
-                ))}
-            </div>
-            {upcomingTasks.length > 6 && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500">
-                  +{upcomingTasks.length - 6} more upcoming tasks
-                </p>
+          <div className="space-y-2">
+            {overdueTasks.slice(0, 3).map((task) => (
+              <div key={task.id} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-red-900">{task.title}</p>
+                  <p className="text-xs text-red-600">
+                    Due {new Date(task.dueDate!).toLocaleDateString()}
+                  </p>
+                </div>
+                <Link href={`/projects/${task.projectId}`}>
+                  <Button variant="outline" size="sm" className="text-red-600 border-red-300">
+                    View
+                  </Button>
+                </Link>
               </div>
+            ))}
+            {overdueTasks.length > 3 && (
+              <p className="text-xs text-red-600">
+                +{overdueTasks.length - 3} more overdue tasks
+              </p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Upcoming Tasks - Full Width */}
+      {upcomingTasks.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Calendar className="h-6 w-6 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Upcoming Tasks</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcomingTasks
+              .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+              .slice(0, 6)
+              .map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/projects/${task.projectId}?highlight=${task.id}`}
+                  className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
+                >
+                  <div className="mb-3">
+                    <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors mb-2">
+                      {task.title}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {task.assignee ? (
+                        task.assignee.image ? (
+                          <img
+                            src={task.assignee.image}
+                            alt={task.assignee.name || "User"}
+                            className="w-4 h-4 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            {task.assignee.name?.charAt(0) || "?"}
+                          </div>
+                        )
+                      ) : null}
+                      <p className="text-xs text-gray-500">
+                        {task.assignee?.name || 'Unassigned'} • {task.priority} priority
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
+                      <span className="text-xs text-gray-500">
+                        Due {new Date(task.dueDate!).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <ArrowRight className="h-3 w-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  </div>
+                </Link>
+              ))}
+          </div>
+          {upcomingTasks.length > 6 && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500">
+                +{upcomingTasks.length - 6} more upcoming tasks
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );
