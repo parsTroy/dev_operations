@@ -22,8 +22,6 @@ export function MentionAutocomplete({ members, onSelect, onClose, position }: Me
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
-  console.log("MentionAutocomplete rendered:", { members: members.length, position });
-
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();

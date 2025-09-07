@@ -101,8 +101,6 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
     const textBeforeCursor = value.substring(0, cursorPos);
     const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
     
-    console.log("Input change:", { value, cursorPos, textBeforeCursor, mentionMatch, members: members?.length });
-    
     if (mentionMatch) {
       const query = mentionMatch[1] || "";
       setMentionQuery(query);
@@ -113,8 +111,6 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
         const email = member.user.email?.toLowerCase() || "";
         return name.includes(query.toLowerCase()) || email.includes(query.toLowerCase());
       }) || [];
-
-      console.log("Filtered members:", filteredMembers);
 
       if (filteredMembers.length > 0) {
         setShowMentionAutocomplete(true);
@@ -293,29 +289,19 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
         
         {/* Mention Autocomplete */}
         {showMentionAutocomplete && members && (
-          <>
-            {console.log("Rendering autocomplete:", { showMentionAutocomplete, members: members.length, mentionQuery })}
-            <MentionAutocomplete
-              members={members.filter(member => {
-                const name = member.user.name?.toLowerCase() || "";
-                const email = member.user.email?.toLowerCase() || "";
-                return name.includes(mentionQuery.toLowerCase()) || email.includes(mentionQuery.toLowerCase());
-              })}
-              onSelect={handleMentionSelect}
-              onClose={() => {
-                setShowMentionAutocomplete(false);
-                setMentionQuery("");
-              }}
-              position={mentionPosition}
-            />
-          </>
-        )}
-        
-        {/* Debug: Always show autocomplete for testing */}
-        {message.includes("@") && members && (
-          <div className="fixed top-20 left-4 z-[9999] bg-yellow-100 border border-yellow-300 rounded-lg p-2 text-xs">
-            Debug: @ detected, members: {members.length}, showAutocomplete: {showMentionAutocomplete.toString()}
-          </div>
+          <MentionAutocomplete
+            members={members.filter(member => {
+              const name = member.user.name?.toLowerCase() || "";
+              const email = member.user.email?.toLowerCase() || "";
+              return name.includes(mentionQuery.toLowerCase()) || email.includes(mentionQuery.toLowerCase());
+            })}
+            onSelect={handleMentionSelect}
+            onClose={() => {
+              setShowMentionAutocomplete(false);
+              setMentionQuery("");
+            }}
+            position={mentionPosition}
+          />
         )}
       </form>
     </div>
