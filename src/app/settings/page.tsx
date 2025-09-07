@@ -7,7 +7,7 @@ import { SignOutButton } from "~/components/auth/sign-out-button";
 import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
-import { ArrowLeft, User, Shield, Palette, Globe, Database, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Shield, Database, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { useState } from "react";
 function SettingsContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "appearance" | "data">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "data">("profile");
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [twoFAToken, setTwoFAToken] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -78,7 +78,6 @@ function SettingsContent() {
   const settingsTabs = [
     { id: "profile", label: "Profile", icon: User },
     { id: "privacy", label: "Privacy & Security", icon: Shield },
-    { id: "appearance", label: "Appearance", icon: Palette },
     { id: "data", label: "Data & Storage", icon: Database },
   ];
 
@@ -406,70 +405,6 @@ function SettingsContent() {
                 </div>
               )}
 
-              {activeTab === "appearance" && (
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Appearance</h2>
-                  
-                  <div className="space-y-6">
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-3">Language</h3>
-                      <select 
-                        value={settings?.language || "en"}
-                        onChange={(e) => updateSettings.mutate({ language: e.target.value })}
-                        className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={updateSettings.isPending}
-                      >
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="it">Italian</option>
-                        <option value="pt">Portuguese</option>
-                        <option value="ja">Japanese</option>
-                        <option value="ko">Korean</option>
-                        <option value="zh">Chinese</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-3">Time Zone</h3>
-                      <select 
-                        value={settings?.timezone || "UTC-8"}
-                        onChange={(e) => updateSettings.mutate({ timezone: e.target.value })}
-                        className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={updateSettings.isPending}
-                      >
-                        <option value="UTC-12">UTC-12 (Baker Island)</option>
-                        <option value="UTC-11">UTC-11 (American Samoa)</option>
-                        <option value="UTC-10">UTC-10 (Hawaii)</option>
-                        <option value="UTC-9">UTC-9 (Alaska)</option>
-                        <option value="UTC-8">UTC-8 (Pacific Time)</option>
-                        <option value="UTC-7">UTC-7 (Mountain Time)</option>
-                        <option value="UTC-6">UTC-6 (Central Time)</option>
-                        <option value="UTC-5">UTC-5 (Eastern Time)</option>
-                        <option value="UTC-4">UTC-4 (Atlantic Time)</option>
-                        <option value="UTC-3">UTC-3 (Brazil)</option>
-                        <option value="UTC-2">UTC-2 (Mid-Atlantic)</option>
-                        <option value="UTC-1">UTC-1 (Azores)</option>
-                        <option value="UTC+0">UTC+0 (GMT)</option>
-                        <option value="UTC+1">UTC+1 (CET)</option>
-                        <option value="UTC+2">UTC+2 (EET)</option>
-                        <option value="UTC+3">UTC+3 (Moscow)</option>
-                        <option value="UTC+4">UTC+4 (Gulf)</option>
-                        <option value="UTC+5">UTC+5 (Pakistan)</option>
-                        <option value="UTC+6">UTC+6 (Bangladesh)</option>
-                        <option value="UTC+7">UTC+7 (Thailand)</option>
-                        <option value="UTC+8">UTC+8 (China)</option>
-                        <option value="UTC+9">UTC+9 (Japan)</option>
-                        <option value="UTC+10">UTC+10 (Australia)</option>
-                        <option value="UTC+11">UTC+11 (Solomon Islands)</option>
-                        <option value="UTC+12">UTC+12 (New Zealand)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {activeTab === "data" && (
                 <div className="p-6">

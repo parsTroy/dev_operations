@@ -255,9 +255,6 @@ model UserSettings {
   twoFactorSecret       String?  // Store 2FA secret
   profileVisibility     String   @default("team") // "team", "public", "private"
   showActivityStatus    Boolean  @default(true)
-  // Appearance
-  language              String   @default("en") // "en", "es", "fr", "de"
-  timezone              String   @default("UTC-8") // User's timezone
   // Notifications (for future use)
   emailNotifications    Boolean  @default(true)
   pushNotifications     Boolean  @default(true)
