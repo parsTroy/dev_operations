@@ -9,6 +9,11 @@ export const subscriptionsRouter = createTRPCRouter({
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        createdAt: true,
         subscriptionTier: true,
         projectLimit: true,
         subscriptionStatus: true,

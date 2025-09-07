@@ -7,7 +7,7 @@ import { SignOutButton } from "~/components/auth/sign-out-button";
 import { NotificationsDropdown } from "~/components/notifications/notifications-dropdown";
 import { UserProfile } from "~/components/profile/user-profile";
 import { AuthRedirect } from "~/components/auth/auth-redirect";
-import { ArrowLeft, User, Bell, Shield, Palette, Globe, Database, Trash2 } from "lucide-react";
+import { ArrowLeft, User, Shield, Palette, Globe, Database, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { useState } from "react";
@@ -15,13 +15,12 @@ import { useState } from "react";
 function SettingsContent() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "notifications" | "privacy" | "appearance" | "data">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "privacy" | "appearance" | "data">("profile");
 
   const { data: user } = api.subscriptions.getCurrentSubscription.useQuery();
 
   const settingsTabs = [
     { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "privacy", label: "Privacy & Security", icon: Shield },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "data", label: "Data & Storage", icon: Database },
@@ -162,62 +161,49 @@ function SettingsContent() {
                         <div>
                           <span className="text-gray-600">Status:</span>
                           <span className="ml-2 font-medium text-green-600">
-                            Active
+                            {user?.subscriptionStatus || "Active"}
                           </span>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "notifications" && (
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-                  
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">Email Notifications</h3>
-                        <p className="text-sm text-gray-600">Receive email updates about your projects</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">Push Notifications</h3>
-                        <p className="text-sm text-gray-600">Receive browser notifications for real-time updates</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">Task Assignments</h3>
-                        <p className="text-sm text-gray-600">Get notified when tasks are assigned to you</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium text-gray-900">Mentions</h3>
-                        <p className="text-sm text-gray-600">Get notified when someone mentions you in chat</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
+                      
+                      {/* Subscription Details */}
+                      {user?.subscriptions && user.subscriptions.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <h4 className="font-medium text-gray-900 mb-2">Subscription Details</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Plan:</span>
+                              <span className="ml-2 font-medium">
+                                {user.subscriptions[0]?.subscriptionPlan?.name || "Unknown"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Next billing:</span>
+                              <span className="ml-2 font-medium">
+                                {user.subscriptions[0]?.currentPeriodEnd 
+                                  ? formatDate(new Date(user.subscriptions[0].currentPeriodEnd))
+                                  : "N/A"
+                                }
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Amount:</span>
+                              <span className="ml-2 font-medium">
+                                ${user.subscriptions[0]?.subscriptionPlan?.price || 0}
+                                {user.subscriptions[0]?.subscriptionPlan?.interval === "month" ? "/month" : 
+                                 user.subscriptions[0]?.subscriptionPlan?.interval === "year" ? "/year" : 
+                                 user.subscriptions[0]?.subscriptionPlan?.interval === "lifetime" ? " one-time" : ""}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Auto-renewal:</span>
+                              <span className="ml-2 font-medium">
+                                {user.subscriptions[0]?.cancelAtPeriodEnd ? "No" : "Yes"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

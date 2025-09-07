@@ -52,6 +52,11 @@ export function UserProfile() {
                     year: 'numeric', 
                     month: 'long' 
                   })}
+                  {user?.subscriptionTier && user.subscriptionTier !== 'free' && (
+                    <span className="ml-2 text-blue-400">
+                      • {user.subscriptionTier === 'pro' ? 'Pro' : 'Lifetime'} member
+                    </span>
+                  )}
                 </p>
               )}
             </div>
