@@ -245,30 +245,30 @@ function DashboardStats() {
                 href={`/projects/${task.projectId}?highlight=${task.id}`}
                 className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} flex-shrink-0 mt-1`}></div>
-                  <div className="flex-1 min-w-0">
+                <div className="mb-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-3 h-3 rounded-full ${getStatusColor(task.status)} flex-shrink-0`}></div>
                     <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {task.title}
                     </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      {task.assignee ? (
-                        task.assignee.image ? (
-                          <img
-                            src={task.assignee.image}
-                            alt={task.assignee.name || "User"}
-                            className="w-4 h-4 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                            {task.assignee.name?.charAt(0) || "?"}
-                          </div>
-                        )
-                      ) : null}
-                      <p className="text-xs text-gray-500">
-                        {task.assignee?.name || 'Unassigned'} • {task.priority} priority
-                      </p>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {task.assignee ? (
+                      task.assignee.image ? (
+                        <img
+                          src={task.assignee.image}
+                          alt={task.assignee.name || "User"}
+                          className="w-4 h-4 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                          {task.assignee.name?.charAt(0) || "?"}
+                        </div>
+                      )
+                    ) : null}
+                    <p className="text-xs text-gray-500">
+                      {task.assignee?.name || 'Unassigned'} • {task.priority} priority
+                    </p>
                   </div>
                 </div>
                 
