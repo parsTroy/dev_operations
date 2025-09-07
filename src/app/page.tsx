@@ -203,7 +203,22 @@ function DashboardStats() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {upcomingTasks
-              .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+              .sort((a, b) => {
+                // First sort by due date (most important)
+                const dateA = new Date(a.dueDate!).getTime();
+                const dateB = new Date(b.dueDate!).getTime();
+                
+                if (dateA !== dateB) {
+                  return dateA - dateB;
+                }
+                
+                // If same due date, sort by priority (HIGH > MEDIUM > LOW)
+                const priorityOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+                const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 0;
+                const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 0;
+                
+                return priorityB - priorityA; // Higher priority first
+              })
               .slice(0, 6)
               .map((task) => (
                 <Link
