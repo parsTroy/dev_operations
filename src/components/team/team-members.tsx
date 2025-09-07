@@ -95,9 +95,17 @@ export function TeamMembers({ projectId, currentUserId }: TeamMembersProps) {
             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                {member.user.name?.charAt(0) || member.user.email?.charAt(0) || "?"}
-              </div>
+              {member.user.image ? (
+                <img
+                  src={member.user.image}
+                  alt={member.user.name || "User"}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                  {member.user.name?.charAt(0) || member.user.email?.charAt(0) || "?"}
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium text-gray-900">

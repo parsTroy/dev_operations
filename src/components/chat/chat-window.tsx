@@ -149,9 +149,17 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
-                    {msg.user.name?.charAt(0) || "?"}
-                  </div>
+                  {msg.user.image ? (
+                    <img
+                      src={msg.user.image}
+                      alt={msg.user.name || "User"}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                      {msg.user.name?.charAt(0) || "?"}
+                    </div>
+                  )}
                   <span className="text-xs font-medium">
                     {msg.user.name || "Unknown User"}
                   </span>

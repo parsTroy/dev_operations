@@ -102,7 +102,21 @@ export function DraggableTaskCard({ task, projectId, isHighlighted = false }: Dr
 
           {/* Assigned Team Member - Always show this section for consistency */}
           <div className="mt-2 flex items-center gap-2">
-            <User className="h-3 w-3 text-gray-400" />
+            {task.assignee ? (
+              task.assignee.image ? (
+                <img
+                  src={task.assignee.image}
+                  alt={task.assignee.name || "User"}
+                  className="w-4 h-4 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                  {task.assignee.name?.charAt(0) || "?"}
+                </div>
+              )
+            ) : (
+              <User className="h-3 w-3 text-gray-400" />
+            )}
             <span className="text-xs text-gray-600">
               {task.assignee ? (task.assignee.name || 'Unknown User') : 'Unassigned'}
             </span>

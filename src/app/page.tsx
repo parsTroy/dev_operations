@@ -251,9 +251,24 @@ function DashboardStats() {
                     <h4 className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {task.title}
                     </h4>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {task.assignee?.name || 'Unassigned'} • {task.priority} priority
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {task.assignee ? (
+                        task.assignee.image ? (
+                          <img
+                            src={task.assignee.image}
+                            alt={task.assignee.name || "User"}
+                            className="w-4 h-4 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            {task.assignee.name?.charAt(0) || "?"}
+                          </div>
+                        )
+                      ) : null}
+                      <p className="text-xs text-gray-500">
+                        {task.assignee?.name || 'Unassigned'} • {task.priority} priority
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
