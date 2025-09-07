@@ -7,6 +7,8 @@ import { SessionProvider } from "next-auth/react";
 import { TRPCReactProvider } from "~/trpc/react";
 import { PerformanceMonitor } from "~/components/performance/performance-monitor";
 
+import { Analytics } from "@vercel/analytics/next"
+
 export const metadata: Metadata = {
   title: "dev_operations - Developer Collaboration Hub",
   description: "A collaborative app for developers to manage projects, tasks, and documentation",
@@ -64,6 +66,7 @@ export default function RootLayout({
         <SessionProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </SessionProvider>
+        <Analytics/>  
       </body>
     </html>
   );
