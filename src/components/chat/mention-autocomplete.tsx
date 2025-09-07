@@ -22,6 +22,8 @@ export function MentionAutocomplete({ members, onSelect, onClose, position }: Me
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
+  console.log("MentionAutocomplete rendered:", { members: members.length, position });
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -58,7 +60,7 @@ export function MentionAutocomplete({ members, onSelect, onClose, position }: Me
   return (
     <div
       ref={listRef}
-      className="absolute z-50 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto min-w-48"
+      className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto min-w-48"
       style={{
         top: position.top,
         left: position.left,
