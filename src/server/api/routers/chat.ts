@@ -60,6 +60,83 @@ export const chatRouter = createTRPCRouter({
           include: { user: true, mentions: { include: { user: true } } },
         });
 
+        // Get project members for notifications
+        const projectMembers = await ctx.db.projectMember.findMany({
+          where: { projectId: input.projectId },
+          include: { user: true },
+        });
+
+        // Send notifications to mentioned users
+        for (const mentionedUser of mentionedUsers) {
+          await ctx.db.notification.create({
+            data: {
+              userId: mentionedUser.id,
+              type: "chat_mention",
+              title: "You were mentioned in chat",
+              message: `${ctx.session.user.name || ctx.session.user.email} mentioned you in a chat message`,
+              data: {
+                messageId: message.id,
+                projectId: input.projectId,
+                mentionedBy: ctx.session.user.id,
+                mentionedByName: ctx.session.user.name || ctx.session.user.email,
+                messageContent: input.content,
+              },
+            },
+          });
+
+          // Send real-time notification via Pusher
+          try {
+            await pusher.trigger(`user-${mentionedUser.id}`, "new-notification", {
+              type: "chat_mention",
+              title: "You were mentioned in chat",
+              message: `${ctx.session.user.name || ctx.session.user.email} mentioned you in a chat message`,
+              data: {
+                messageId: message.id,
+                projectId: input.projectId,
+              },
+            });
+          } catch (error) {
+            console.error("Failed to send Pusher notification:", error);
+          }
+        }
+
+        // Send general chat notifications to other project members (not the sender or mentioned users)
+        const mentionedUserIds = mentionedUsers.map(u => u.id);
+        for (const member of projectMembers) {
+          if (member.userId !== ctx.session.user.id && !mentionedUserIds.includes(member.userId)) {
+            await ctx.db.notification.create({
+              data: {
+                userId: member.userId,
+                type: "chat_message",
+                title: "New chat message",
+                message: `${ctx.session.user.name || ctx.session.user.email} sent a message in project chat`,
+                data: {
+                  messageId: message.id,
+                  projectId: input.projectId,
+                  sentBy: ctx.session.user.id,
+                  sentByName: ctx.session.user.name || ctx.session.user.email,
+                  messageContent: input.content,
+                },
+              },
+            });
+
+            // Send real-time notification via Pusher
+            try {
+              await pusher.trigger(`user-${member.userId}`, "new-notification", {
+                type: "chat_message",
+                title: "New chat message",
+                message: `${ctx.session.user.name || ctx.session.user.email} sent a message in project chat`,
+                data: {
+                  messageId: message.id,
+                  projectId: input.projectId,
+                },
+              });
+            } catch (error) {
+              console.error("Failed to send Pusher notification:", error);
+            }
+          }
+        }
+
         // Trigger real-time update with mentions
         await pusher.trigger(`project-${input.projectId}`, "new-message", {
           message: messageWithMentions,
@@ -67,6 +144,48 @@ export const chatRouter = createTRPCRouter({
         });
 
         return messageWithMentions;
+      }
+
+      // Get project members for notifications
+      const projectMembers = await ctx.db.projectMember.findMany({
+        where: { projectId: input.projectId },
+        include: { user: true },
+      });
+
+      // Send general chat notifications to other project members (not the sender)
+      for (const member of projectMembers) {
+        if (member.userId !== ctx.session.user.id) {
+          await ctx.db.notification.create({
+            data: {
+              userId: member.userId,
+              type: "chat_message",
+              title: "New chat message",
+              message: `${ctx.session.user.name || ctx.session.user.email} sent a message in project chat`,
+              data: {
+                messageId: message.id,
+                projectId: input.projectId,
+                sentBy: ctx.session.user.id,
+                sentByName: ctx.session.user.name || ctx.session.user.email,
+                messageContent: input.content,
+              },
+            },
+          });
+
+          // Send real-time notification via Pusher
+          try {
+            await pusher.trigger(`user-${member.userId}`, "new-notification", {
+              type: "chat_message",
+              title: "New chat message",
+              message: `${ctx.session.user.name || ctx.session.user.email} sent a message in project chat`,
+              data: {
+                messageId: message.id,
+                projectId: input.projectId,
+              },
+            });
+          } catch (error) {
+            console.error("Failed to send Pusher notification:", error);
+          }
+        }
       }
 
       // Trigger real-time update

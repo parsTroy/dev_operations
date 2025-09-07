@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { usePusher } from "~/hooks/use-pusher";
 import { Button } from "~/components/ui/button";
 import { Send, MessageCircle, Users } from "lucide-react";
+import { MentionAutocomplete } from "./mention-autocomplete";
 
 interface ChatWindowProps {
   projectId: string;
@@ -17,7 +18,12 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastMessageId, setLastMessageId] = useState<string | null>(null);
+  const [showMentionAutocomplete, setShowMentionAutocomplete] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+  const [cursorPosition, setCursorPosition] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const pusher = usePusher();
 
   const { data: messages, isLoading } = api.chat.getMessages.useQuery({ projectId });
@@ -35,7 +41,7 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
   useEffect(() => {
     if (messages && messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
-      if (latestMessage.id !== lastMessageId) {
+      if (latestMessage && latestMessage.id !== lastMessageId) {
         setLastMessageId(latestMessage.id);
         // If chat is closed and this is a new message from someone else, increment unread count
         if (!isOpen && latestMessage.userId !== session?.user?.id) {
@@ -82,6 +88,77 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
   const handleOpenChat = () => {
     setIsOpen(true);
     setUnreadCount(0); // Clear unread count when chat is opened
+  };
+
+  // Handle mention autocomplete
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart || 0;
+    setMessage(value);
+    setCursorPosition(cursorPos);
+
+    // Check for @mention
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (mentionMatch) {
+      const query = mentionMatch[1] || "";
+      setMentionQuery(query);
+      
+      // Filter members based on query
+      const filteredMembers = members?.filter(member => {
+        const name = member.user.name?.toLowerCase() || "";
+        const email = member.user.email?.toLowerCase() || "";
+        return name.includes(query.toLowerCase()) || email.includes(query.toLowerCase());
+      }) || [];
+
+      if (filteredMembers.length > 0) {
+        setShowMentionAutocomplete(true);
+        // Position the autocomplete dropdown
+        if (inputRef.current) {
+          const rect = inputRef.current.getBoundingClientRect();
+          setMentionPosition({
+            top: rect.bottom + window.scrollY,
+            left: rect.left + window.scrollX,
+          });
+        }
+      } else {
+        setShowMentionAutocomplete(false);
+      }
+    } else {
+      setShowMentionAutocomplete(false);
+    }
+  };
+
+  const handleMentionSelect = (username: string) => {
+    const textBeforeCursor = message.substring(0, cursorPosition);
+    const textAfterCursor = message.substring(cursorPosition);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (mentionMatch) {
+      const beforeMention = textBeforeCursor.substring(0, mentionMatch.index);
+      const newMessage = beforeMention + `@${username} ` + textAfterCursor;
+      setMessage(newMessage);
+      
+      // Set cursor position after the mention
+      const newCursorPos = beforeMention.length + username.length + 2;
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    }
+    
+    setShowMentionAutocomplete(false);
+    setMentionQuery("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showMentionAutocomplete && (e.key === "Escape" || e.key === "Tab")) {
+      e.preventDefault();
+      setShowMentionAutocomplete(false);
+      setMentionQuery("");
+    }
   };
 
   const formatMessage = (content: string) => {
@@ -186,12 +263,14 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t">
+      <form onSubmit={handleSubmit} className="p-4 border-t relative">
         <div className="flex gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             placeholder="Type a message... (use @username to mention)"
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             disabled={sendMessage.isPending}
@@ -207,6 +286,23 @@ export function ChatWindow({ projectId }: ChatWindowProps) {
         <p className="text-xs text-gray-500 mt-1">
           Use @username to mention team members
         </p>
+        
+        {/* Mention Autocomplete */}
+        {showMentionAutocomplete && members && (
+          <MentionAutocomplete
+            members={members.filter(member => {
+              const name = member.user.name?.toLowerCase() || "";
+              const email = member.user.email?.toLowerCase() || "";
+              return name.includes(mentionQuery.toLowerCase()) || email.includes(mentionQuery.toLowerCase());
+            })}
+            onSelect={handleMentionSelect}
+            onClose={() => {
+              setShowMentionAutocomplete(false);
+              setMentionQuery("");
+            }}
+            position={mentionPosition}
+          />
+        )}
       </form>
     </div>
   );
