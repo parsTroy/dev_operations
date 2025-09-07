@@ -29,7 +29,6 @@ export const settingsRouter = createTRPCRouter({
       z.object({
         profileVisibility: z.enum(["team", "public", "private"]).optional(),
         showActivityStatus: z.boolean().optional(),
-        theme: z.enum(["light", "dark", "auto"]).optional(),
         language: z.string().optional(),
         timezone: z.string().optional(),
         emailNotifications: z.boolean().optional(),

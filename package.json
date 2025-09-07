@@ -70,6 +70,7 @@
     "@tailwindcss/postcss": "^4.0.15",
     "@types/node": "^20.19.13",
     "@types/nodemailer": "^6.4.14",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/stripe": "^8.0.416",

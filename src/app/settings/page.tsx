@@ -150,18 +150,24 @@ function SettingsContent() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Profile Information</h2>
                   
                   <div className="space-y-6">
-                    {/* Profile Picture */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-medium">
-                        {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || "?"}
-                      </div>
-                      <div>
-                        <Button variant="outline" size="sm">
-                          Change Photo
-                        </Button>
-                        <p className="text-sm text-gray-500 mt-1">JPG, PNG or GIF. Max size 2MB.</p>
-                      </div>
-                    </div>
+                                {/* Profile Picture */}
+                                <div className="flex items-center gap-4">
+                                  {session?.user?.image ? (
+                                    <img
+                                      src={session.user.image}
+                                      alt={session.user.name || "User"}
+                                      className="w-16 h-16 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-medium">
+                                      {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || "?"}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-sm text-gray-500">Profile picture managed by your authentication provider</p>
+                                    <p className="text-xs text-gray-400 mt-1">GitHub, Google, etc.</p>
+                                  </div>
+                                </div>
 
                     {/* User Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -405,47 +411,6 @@ function SettingsContent() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Appearance</h2>
                   
                   <div className="space-y-6">
-                    <div>
-                      <h3 className="font-medium text-gray-900 mb-3">Theme</h3>
-                      <div className="grid grid-cols-3 gap-4">
-                        <button 
-                          onClick={() => updateSettings.mutate({ theme: "light" })}
-                          className={`p-4 border-2 rounded-lg transition-all ${
-                            settings?.theme === "light" 
-                              ? "border-blue-500 bg-blue-50" 
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                          disabled={updateSettings.isPending}
-                        >
-                          <div className="w-full h-8 bg-white border rounded mb-2"></div>
-                          <span className="text-sm font-medium">Light</span>
-                        </button>
-                        <button 
-                          onClick={() => updateSettings.mutate({ theme: "dark" })}
-                          className={`p-4 border-2 rounded-lg transition-all ${
-                            settings?.theme === "dark" 
-                              ? "border-blue-500 bg-blue-50" 
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                          disabled={updateSettings.isPending}
-                        >
-                          <div className="w-full h-8 bg-gray-900 border rounded mb-2"></div>
-                          <span className="text-sm font-medium">Dark</span>
-                        </button>
-                        <button 
-                          onClick={() => updateSettings.mutate({ theme: "auto" })}
-                          className={`p-4 border-2 rounded-lg transition-all ${
-                            settings?.theme === "auto" 
-                              ? "border-blue-500 bg-blue-50" 
-                              : "border-gray-300 hover:border-gray-400"
-                          }`}
-                          disabled={updateSettings.isPending}
-                        >
-                          <div className="w-full h-8 bg-gradient-to-r from-blue-500 to-purple-500 border rounded mb-2"></div>
-                          <span className="text-sm font-medium">Auto</span>
-                        </button>
-                      </div>
-                    </div>
 
                     <div>
                       <h3 className="font-medium text-gray-900 mb-3">Language</h3>
