@@ -89,7 +89,7 @@ function BillingContent() {
                 <div className="text-right">
                   <div className="text-3xl font-bold text-gray-900">
                     {user.subscriptionTier === 'free' ? '$0' : 
-                     user.subscriptionTier === 'pro' ? '$19' : '$499'}
+                     user.subscriptionTier === 'pro' ? '$5' : '$249'}
                   </div>
                   <div className="text-gray-600">
                     {user.subscriptionTier === 'free' ? 'forever' :

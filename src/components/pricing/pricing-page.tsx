@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, X, Percent } from "lucide-react";
 import { api } from "~/trpc/react";
 import { CheckoutForm } from "~/components/payment/checkout-form";
 
@@ -10,6 +10,7 @@ export function PricingPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
   const { data: plans } = api.subscriptions.getPlans.useQuery();
   const { data: currentSubscription } = api.subscriptions.getCurrentSubscription.useQuery();
@@ -22,6 +23,22 @@ export function PricingPage() {
     "Advanced analytics",
     "Custom integrations",
   ];
+
+  // Pricing configuration
+  const pricing = {
+    monthly: {
+      pro: { price: 5, priceId: "pro_monthly" },
+    },
+    annual: {
+      pro: { price: 49, priceId: "pro_annual", monthlyEquivalent: 4.08, savings: 18 },
+    },
+    lifetime: {
+      price: 249,
+      priceId: "lifetime",
+      monthlyEquivalent: 2.08,
+      savings: 58
+    }
+  };
 
   const handleSubscribe = async (priceId: string) => {
     setSelectedPlan(priceId);
@@ -72,9 +89,40 @@ export function PricingPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-8">
             Start free, upgrade when you're ready
           </p>
+          
+          {/* Billing Cycle Toggle */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="bg-white rounded-lg p-1 shadow-sm border">
+              <div className="flex">
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                    billingCycle === 'monthly'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle('annual')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-all relative ${
+                    billingCycle === 'annual'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Annual
+                  <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    Save 18%
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -121,8 +169,27 @@ export function PricingPage() {
             </div>
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
-              <p className="text-4xl font-bold text-gray-900 mb-4">$19</p>
-              <p className="text-gray-600 mb-6">per month</p>
+              <div className="mb-4">
+                <p className="text-4xl font-bold text-gray-900">
+                  ${billingCycle === 'monthly' ? pricing.monthly.pro.price : pricing.annual.pro.price}
+                </p>
+                <p className="text-gray-600">
+                  {billingCycle === 'monthly' ? 'per month' : 'per year'}
+                </p>
+                {billingCycle === 'annual' && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      ${pricing.annual.pro.monthlyEquivalent}/month
+                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <Percent className="h-3 w-3 text-green-500" />
+                      <span className="text-xs text-green-600 font-medium">
+                        Save {pricing.annual.pro.savings}% vs monthly
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <ul className="space-y-3 mb-8">
               {features.map((feature) => (
@@ -134,7 +201,7 @@ export function PricingPage() {
             </ul>
             <Button
               className="w-full"
-              onClick={() => handleSubscribe("pro_monthly")}
+              onClick={() => handleSubscribe(billingCycle === 'monthly' ? pricing.monthly.pro.priceId : pricing.annual.pro.priceId)}
               disabled={isLoading || currentSubscription?.subscriptionTier === "pro"}
             >
               {isLoading ? "Processing..." : currentSubscription?.subscriptionTier === "pro" ? "Current Plan" : "Upgrade to Pro"}
@@ -142,11 +209,29 @@ export function PricingPage() {
           </div>
 
           {/* Lifetime Plan */}
-          <div className="bg-white rounded-lg shadow-sm border p-8">
+          <div className="bg-white rounded-lg shadow-sm border p-8 relative">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Best Value
+              </span>
+            </div>
             <div className="text-center">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Lifetime</h3>
-              <p className="text-4xl font-bold text-gray-900 mb-4">$499</p>
-              <p className="text-gray-600 mb-6">one-time payment</p>
+              <div className="mb-4">
+                <p className="text-4xl font-bold text-gray-900">${pricing.lifetime.price}</p>
+                <p className="text-gray-600">one-time payment</p>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500">
+                    ${pricing.lifetime.monthlyEquivalent}/month equivalent
+                  </p>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    <Percent className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-green-600 font-medium">
+                      Save {pricing.lifetime.savings}% vs monthly
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
             <ul className="space-y-3 mb-8">
               {features.map((feature) => (
@@ -162,7 +247,7 @@ export function PricingPage() {
             </ul>
             <Button
               className="w-full"
-              onClick={() => handleSubscribe("lifetime")}
+              onClick={() => handleSubscribe(pricing.lifetime.priceId)}
               disabled={isLoading || currentSubscription?.subscriptionTier === "lifetime"}
             >
               {isLoading ? "Processing..." : currentSubscription?.subscriptionTier === "lifetime" ? "Current Plan" : "Get Lifetime Access"}
