@@ -1,4 +1,4 @@
-# dev_operations 🚀
+# dev_operations
 
 **A modern developer collaboration platform** that combines project management, team collaboration, and real-time communication in one powerful tool. Built with the T3 Stack and designed for development teams who want to streamline their workflow.
 
@@ -7,9 +7,9 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-5.0+-2D3748)
 
-## ✨ Features
+## Features
 
-### 🎯 **Core Functionality**
+### **Core Functionality**
 - **Project Management** - Create, organize, and track development projects
 - **Task Management** - Drag-and-drop Kanban boards with priority levels and due dates
 - **Team Collaboration** - Role-based access control (Admin, Member, Viewer)
@@ -17,14 +17,14 @@
 - **Documentation** - Markdown-powered project wikis with collaborative editing
 - **Notifications** - Real-time notifications for tasks, mentions, and updates
 
-### 🚀 **Advanced Features**
+### **Advanced Features**
 - **Real-time Updates** - Live updates across all team members using WebSockets
 - **GitHub Integration** - Seamless authentication and project linking
 - **Responsive Design** - Works perfectly on desktop, tablet, and mobile
 - **Modern UI/UX** - Beautiful, intuitive interface with smooth animations
 - **Interactive Demo** - Try the platform without signing up
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### **Frontend**
 - **[Next.js 15.5.2](https://nextjs.org)** - React framework with App Router
@@ -50,72 +50,7 @@
 - **[Husky](https://typicode.github.io/husky)** - Git hooks
 - **[TypeScript](https://www.typescriptlang.org)** - Static type checking
 
-## 🚀 Quick Start
-
-### **Prerequisites**
-- Node.js 18+ 
-- npm or yarn
-- PostgreSQL database (or use Supabase)
-
-### **Installation**
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/dev_operations.git
-   cd dev_operations
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Fill in your environment variables:
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/dev_operations"
-   
-   # NextAuth
-   NEXTAUTH_SECRET="your-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
-   
-   # GitHub OAuth
-   GITHUB_CLIENT_ID="your-github-client-id"
-   GITHUB_CLIENT_SECRET="your-github-client-secret"
-   
-   # Google OAuth
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   
-   # Pusher (for real-time features)
-   PUSHER_APP_ID="your-pusher-app-id"
-   PUSHER_SECRET="your-pusher-secret"
-   PUSHER_KEY="your-pusher-key"
-   PUSHER_CLUSTER="your-pusher-cluster"
-   NEXT_PUBLIC_PUSHER_KEY="your-pusher-key"
-   NEXT_PUBLIC_PUSHER_CLUSTER="your-pusher-cluster"
-   ```
-
-4. **Set up the database**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 📱 Demo
+## Demo
 
 Try the interactive demo at `/demo` to explore features without signing up:
 - **Project Overview** - See how projects are organized
@@ -123,7 +58,7 @@ Try the interactive demo at `/demo` to explore features without signing up:
 - **Team Collaboration** - View role-based access control
 - **Real-time Chat** - See how team communication works
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 src/
@@ -149,7 +84,7 @@ src/
 └── styles/                # Global styles
 ```
 
-## 🎨 Key Features in Detail
+## Key Features in Detail
 
 ### **Project Management**
 - Create and organize development projects
@@ -181,25 +116,7 @@ src/
 - Version history
 - Rich text formatting
 
-## 🔧 Available Scripts
-
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-
-# Database
-npm run db:generate  # Generate Prisma client
-npm run db:push      # Push schema to database
-npm run db:studio    # Open Prisma Studio
-
-# Code Quality
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript checks
-```
-
-## 🚀 Deployment
+## Deployment
 
 ### **Vercel (Recommended)**
 1. Push your code to GitHub
@@ -212,36 +129,21 @@ npm run type-check   # Run TypeScript checks
 - **Railway** - Full-stack deployment
 - **Docker** - Containerized deployment
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [T3 Stack](https://create.t3.gg/) for the amazing starter template
 - [shadcn/ui](https://ui.shadcn.com) for beautiful components
 - [Tailwind CSS](https://tailwindcss.com) for utility-first styling
 - [Pusher](https://pusher.com) for real-time features
 
-## 📞 Support
+## Contact
 
-- **Documentation** - Check our [docs](https://docs.dev-operations.com)
-- **Issues** - [GitHub Issues](https://github.com/yourusername/dev_operations/issues)
-- **Discussions** - [GitHub Discussions](https://github.com/yourusername/dev_operations/discussions)
-- **Email** - support@dev-operations.com
+- **Portfolio** - [View Portfolio](https://troyparsons.ca)
+- **LinkedIn** - [Connect on LinkedIn](https://linkedin.com/in/troyalparsons/)
+- **Email** - your.email@example.com
 
 ---
 
-**Built with ❤️ by the dev_operations team**
+**Built by Troy Parsons**
 
-*Ready to streamline your development workflow? [Get started today!](https://dev-operations.com)*
+*Ready to streamline your development workflow? [View the live demo!](https://devoperations.ca)*
