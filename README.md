@@ -140,7 +140,7 @@ src/
 
 - **Portfolio** - [View Portfolio](https://troyparsons.ca)
 - **LinkedIn** - [Connect on LinkedIn](https://linkedin.com/in/troyalparsons/)
-- **Email** - your.email@example.com
+- **Email** - devtroyparsons@proton.me
 
 ---
 
