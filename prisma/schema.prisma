@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +10,19 @@ datasource db {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String  @id @default(dbgenerated("(gen_random_uuid())::text"))
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
   @@map("Account")
@@ -34,41 +30,41 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   sessionToken String   @unique
   userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime @db.Timestamp(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("Session")
   @@schema("dev_operations_db")
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  subscriptionTier  String   @default("free") // "free", "pro", "lifetime"
-  projectLimit      Int      @default(5)
-  stripeCustomerId  String?
-  subscriptionStatus String? // "active", "canceled", "past_due", "unpaid"
-  accounts      Account[]
-  sessions      Session[]
-  projects      ProjectMember[]
-  tasks         Task[]        @relation("AssignedTasks")
-  comments      Comment[]
-  chatMessages  ChatMessage[]
-  mentions      Mention[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  subscriptions     UserSubscription[]
-  stripeCustomer    StripeCustomer?
+  id                  String               @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name                String?
+  email               String?              @unique
+  emailVerified       DateTime?            @db.Timestamp(6)
+  image               String?
+  subscriptionTier    String?              @default("free")
+  projectLimit        Int?                 @default(5)
+  stripeCustomerId    String?
+  subscriptionStatus  String?
+  createdAt           DateTime?            @default(now()) @db.Timestamp(6)
+  updatedAt           DateTime?            @default(now()) @updatedAt @db.Timestamp(6)
+  accounts            Account[]
+  chatMessages        ChatMessage[]
+  comments            Comment[]
+  mentions            Mention[]
+  notifications       Notification[]
   paymentTransactions PaymentTransaction[]
-  usageTracking     UsageTracking[]
-  settings          UserSettings?
-  notifications     Notification[]
+  projects            ProjectMember[]
+  sessions            Session[]
+  stripeCustomer      StripeCustomer?
+  tasks               Task[]               @relation("AssignedTasks")
+  usageTracking       UsageTracking[]
+  settings            UserSettings?
+  subscriptions       UserSubscription[]
 
   @@map("User")
   @@schema("dev_operations_db")
@@ -77,7 +73,7 @@ model User {
 model VerificationToken {
   identifier String
   token      String   @unique
-  expires    DateTime
+  expires    DateTime @db.Timestamp(6)
 
   @@unique([identifier, token])
   @@map("VerificationToken")
@@ -85,142 +81,117 @@ model VerificationToken {
 }
 
 model Project {
-  id          String          @id @default(cuid())
-  name        String
-  description String
-  tags        String[]
-  members     ProjectMember[]
-  tasks       Task[]
-  docs        DocPage[]
+  id           String          @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name         String
+  description  String
+  tags         String[]        @default([])
+  createdAt    DateTime?       @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime?       @default(now()) @updatedAt @db.Timestamp(6)
   chatMessages ChatMessage[]
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  docs         DocPage[]
+  members      ProjectMember[]
+  tasks        Task[]
 
   @@map("Project")
   @@schema("dev_operations_db")
 }
 
 model ProjectMember {
-  id        String   @id @default(cuid())
-  role      Role
+  id        String  @id @default(dbgenerated("(gen_random_uuid())::text"))
+  role      String
   userId    String
   projectId String
-  user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user      User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([userId, projectId], name: "userId_projectId")
   @@map("ProjectMember")
   @@schema("dev_operations_db")
 }
 
-enum Role {
-  ADMIN
-  MEMBER
-  VIEWER
-
-  @@schema("dev_operations_db")
-}
-
 model Task {
-  id          String   @id @default(cuid())
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   title       String
   description String?
-  status      Status   @default(TODO)
-  priority    Priority @default(MEDIUM)
-  dueDate     DateTime?
+  status      String?   @default("TODO")
+  priority    String?   @default("MEDIUM")
+  dueDate     DateTime? @db.Timestamp(6)
   projectId   String
   assignedTo  String?
-  project     Project  @relation(fields: [projectId], references: [id])
-  assignee    User?    @relation("AssignedTasks", fields: [assignedTo], references: [id])
+  createdAt   DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @db.Timestamp(6)
   comments    Comment[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  assignee    User?     @relation("AssignedTasks", fields: [assignedTo], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("Task")
   @@schema("dev_operations_db")
 }
 
-enum Status {
-  TODO
-  IN_PROGRESS
-  DONE
-
-  @@schema("dev_operations_db")
-}
-
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
-
-  @@schema("dev_operations_db")
-}
-
 model Comment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   content   String
   taskId    String
   userId    String
-  task      Task     @relation(fields: [taskId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user      User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("Comment")
   @@schema("dev_operations_db")
 }
 
 model DocPage {
-  id        String   @id @default(cuid())
+  id        String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   title     String
   content   String
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("DocPage")
   @@schema("dev_operations_db")
 }
 
 model ChatMessage {
-  id        String   @id @default(cuid())
+  id        String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   content   String
   projectId String
   userId    String
-  project   Project  @relation(fields: [projectId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user      User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   mentions  Mention[]
-  createdAt DateTime @default(now())
 
   @@map("ChatMessage")
   @@schema("dev_operations_db")
 }
 
 model Mention {
-  id        String       @id @default(cuid())
+  id        String      @id @default(dbgenerated("(gen_random_uuid())::text"))
   messageId String
   userId    String
-  message   ChatMessage  @relation(fields: [messageId], references: [id])
-  user      User         @relation(fields: [userId], references: [id])
-  createdAt DateTime     @default(now())
+  createdAt DateTime?   @default(now()) @db.Timestamp(6)
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user      User        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("Mention")
   @@schema("dev_operations_db")
 }
 
 model SubscriptionPlan {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal
-  interval    String   // "month", "year", "lifetime"
-  intervalCount Int    @default(1)
-  stripePriceId String @unique
-  features    Json?    // Store plan features as JSON
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id            String             @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name          String
+  description   String?
+  price         Decimal            @db.Decimal
+  interval      String
+  intervalCount Int?               @default(1)
+  stripePriceId String             @unique
+  features      Json?
+  isActive      Boolean?           @default(true)
+  createdAt     DateTime?          @default(now()) @db.Timestamp(6)
+  updatedAt     DateTime?          @default(now()) @updatedAt @db.Timestamp(6)
   subscriptions UserSubscription[]
 
   @@map("SubscriptionPlan")
@@ -228,106 +199,98 @@ model SubscriptionPlan {
 }
 
 model UserSubscription {
-  id                String   @id @default(cuid())
-  userId            String
-  subscriptionPlanId String
-  stripeCustomerId  String
-  stripeSubscriptionId String @unique
-  status            String   // "active", "canceled", "past_due", "unpaid"
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd Boolean @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscriptionPlan SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id])
-  
+  id                   String           @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId               String
+  subscriptionPlanId   String
+  stripeCustomerId     String
+  stripeSubscriptionId String           @unique
+  status               String
+  currentPeriodStart   DateTime         @db.Timestamp(6)
+  currentPeriodEnd     DateTime         @db.Timestamp(6)
+  cancelAtPeriodEnd    Boolean?         @default(false)
+  createdAt            DateTime?        @default(now()) @db.Timestamp(6)
+  updatedAt            DateTime?        @default(now()) @updatedAt @db.Timestamp(6)
+  subscriptionPlan     SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
   @@unique([userId, subscriptionPlanId])
   @@map("UserSubscription")
   @@schema("dev_operations_db")
 }
 
 model StripeCustomer {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  stripeCustomerId String  @unique
-  email           String
-  name            String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId           String    @unique
+  stripeCustomerId String    @unique
+  email            String
+  name             String?
+  createdAt        DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt        DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("StripeCustomer")
   @@schema("dev_operations_db")
 }
 
 model PaymentTransaction {
-  id                String   @id @default(cuid())
-  userId            String
-  stripePaymentIntentId String @unique
-  amount            Decimal
-  currency          String   @default("usd")
-  status            String   // "succeeded", "failed", "canceled"
-  description       String?
-  metadata          Json?
-  createdAt         DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId                String
+  stripePaymentIntentId String    @unique
+  amount                Decimal   @db.Decimal
+  currency              String?   @default("usd")
+  status                String
+  description           String?
+  metadata              Json?
+  createdAt             DateTime? @default(now()) @db.Timestamp(6)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("PaymentTransaction")
   @@schema("dev_operations_db")
 }
 
 model UsageTracking {
-  id          String   @id @default(cuid())
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   userId      String
-  feature     String   // "projects_created", "tasks_created", etc.
-  count       Int      @default(1)
-  period      String   // "month", "year"
-  periodStart DateTime
-  periodEnd   DateTime
-  createdAt   DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  feature     String
+  count       Int?      @default(1)
+  period      String
+  periodStart DateTime  @db.Timestamp(6)
+  periodEnd   DateTime  @db.Timestamp(6)
+  createdAt   DateTime? @default(now()) @db.Timestamp(6)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
   @@unique([userId, feature, period, periodStart])
   @@map("UsageTracking")
   @@schema("dev_operations_db")
 }
 
 model UserSettings {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  // Privacy & Security
-  profileVisibility     String   @default("team") // "team", "public", "private"
-  showActivityStatus    Boolean  @default(true)
-  // Notifications (for future use)
-  emailNotifications    Boolean  @default(true)
-  pushNotifications     Boolean  @default(true)
-  taskAssignmentAlerts  Boolean  @default(true)
-  mentionAlerts         Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId               String    @unique
+  profileVisibility    String?   @default("team")
+  showActivityStatus   Boolean?  @default(true)
+  emailNotifications   Boolean?  @default(true)
+  pushNotifications    Boolean?  @default(true)
+  taskAssignmentAlerts Boolean?  @default(true)
+  mentionAlerts        Boolean?  @default(true)
+  createdAt            DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt            DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("UserSettings")
   @@schema("dev_operations_db")
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(dbgenerated("(gen_random_uuid())::text"))
   userId    String
-  type      String   // "task_created", "task_updated", "task_moved", "task_assigned", etc.
+  type      String
   title     String
   message   String
-  data      Json?    // Additional data like taskId, projectId, etc.
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json?
+  isRead    Boolean?  @default(false)
+  createdAt DateTime? @default(now()) @db.Timestamp(6)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("Notification")
   @@schema("dev_operations_db")
